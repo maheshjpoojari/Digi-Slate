@@ -98,7 +98,6 @@
       color: #2d3436;
     }
 
-    /* Worksheet Canvas Card */
     .canvas-wrapper {
       position: relative;
       width: 100%;
@@ -269,11 +268,8 @@
     </div>
 
     <div class="canvas-wrapper">
-      <!-- Background guide layer: Hollow track, dashed center, and numbered arrow badges -->
       <canvas id="guideCanvas"></canvas>
-      <!-- Active drawing layer -->
       <canvas id="drawCanvas"></canvas>
-      <!-- Sparkle layer -->
       <canvas id="particleCanvas"></canvas>
 
       <div class="celebration-overlay" id="celebrationCard">
@@ -422,7 +418,7 @@
         { letter: 'र', word: 'रवी', phonic: 'र - रवी', emoji: '☀️', langCode: 'mr-IN' },
         { letter: 'ल', word: 'लसूण', phonic: 'ल - लसूण', emoji: '🧄', langCode: 'mr-IN' },
         { letter: 'व', word: 'वड', phonic: 'व - वड', emoji: '🌳', langCode: 'mr-IN' },
-        { letter: 'श', word: 'शहामृग', phonic: 'श - शहामृग', emoji: '🦤', langCode: 'mr-IN' },
+        { letter: 'श', word: 'शहामृग', phonic: 'श - शहामृग', emoji: '𦤤', langCode: 'mr-IN' },
         { letter: 'ष', word: 'षटकोन', phonic: 'ष - षटकोन', emoji: '⬡', langCode: 'mr-IN' },
         { letter: 'स', word: 'ससा', phonic: 'स - ससा', emoji: '🐰', langCode: 'mr-IN' },
         { letter: 'ह', word: 'हत्ती', phonic: 'ह - हत्ती', emoji: '🐘', langCode: 'mr-IN' },
@@ -473,7 +469,7 @@
       el.classList.add('selected');
     }
 
-    // --- Renders Hollow Boundary Track + Dashed Center + Numbered Badges ---
+    // Clean Track Rendering: Eliminates internal overlapping black artifacts
     function renderLetter() {
       if (autoNextTimer) clearTimeout(autoNextTimer);
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -483,7 +479,6 @@
       const width = rect.width;
       const height = rect.height;
 
-      // Clear layers
       gCtx.clearRect(0, 0, width, height);
       dCtx.clearRect(0, 0, width, height);
       pCtx.clearRect(0, 0, width, height);
@@ -494,30 +489,44 @@
       const centerX = width / 2;
       const centerY = height / 2 + 4;
 
+      // 1. Render Clean Hollow Track using Mask Buffer
+      const maskCanvas = document.createElement('canvas');
+      maskCanvas.width = width;
+      maskCanvas.height = height;
+      const mCtx = maskCanvas.getContext('2d');
+
+      mCtx.font = fontStr;
+      mCtx.textAlign = 'center';
+      mCtx.textBaseline = 'middle';
+
+      // Outer Thick Line
+      mCtx.lineJoin = 'round';
+      mCtx.lineCap = 'round';
+      mCtx.lineWidth = 42;
+      mCtx.strokeStyle = '#2d3436';
+      mCtx.strokeText(item.letter, centerX, centerY);
+      mCtx.fillStyle = '#2d3436';
+      mCtx.fillText(item.letter, centerX, centerY);
+
+      // Hollow Out the Middle (Removes all overlapping internal lines)
+      mCtx.globalCompositeOperation = 'destination-out';
+      mCtx.lineWidth = 36;
+      mCtx.strokeText(item.letter, centerX, centerY);
+      mCtx.fillText(item.letter, centerX, centerY);
+
+      // Draw Hollow Shell to main canvas
+      gCtx.drawImage(maskCanvas, 0, 0);
+
+      // 2. Crisp Center Dashed Guideline
+      gCtx.font = fontStr;
       gCtx.textAlign = 'center';
       gCtx.textBaseline = 'middle';
-      gCtx.font = fontStr;
-
-      // 1. Solid Outer Lane Boundary (Hollow Track)
-      gCtx.setLineDash([]);
-      gCtx.lineWidth = 42;
-      gCtx.lineJoin = 'round';
-      gCtx.lineCap = 'round';
-      gCtx.strokeStyle = '#2d3436';
-      gCtx.strokeText(item.letter, centerX, centerY);
-
-      // 2. White Inner Cutout (Forms the Hollow Writing Channel)
-      gCtx.lineWidth = 36;
-      gCtx.strokeStyle = '#ffffff';
-      gCtx.strokeText(item.letter, centerX, centerY);
-
-      // 3. Center Dashed Guide Line
       gCtx.setLineDash([8, 10]);
-      gCtx.lineWidth = 4;
+      gCtx.lineWidth = 3.5;
       gCtx.strokeStyle = '#74b9ff';
       gCtx.strokeText(item.letter, centerX, centerY);
 
-      // Map letter points for collision and numbered arrow badges
+      // Map Points & Draw Numbered Badges
       mapLetterPointsAndBadges(item.letter, width, height, fontSize, centerX, centerY);
 
       document.getElementById('letter-title').textContent = `${item.letter} - ${item.word}`;
@@ -526,7 +535,6 @@
       isCompleted = false;
     }
 
-    // Maps points and draws Numbered Starting Badges (❶, ❷, ❸) with direction arrows
     function mapLetterPointsAndBadges(letter, width, height, fontSize, cx, cy) {
       const offCanvas = document.createElement('canvas');
       offCanvas.width = width;
@@ -558,7 +566,6 @@
 
       if (allTargetPoints.length === 0) return;
 
-      // 3x3 Spatial partitioning for completion checking
       strokeClusters = [];
       const stepX = (maxX - minX) / 3;
       const stepY = (maxY - minY) / 3;
@@ -577,68 +584,76 @@
         }
       }
 
-      // Draw Numbered Badges & Directional Arrows
       drawStrokeBadges(letter, minX, maxX, minY, maxY);
     }
 
-    // Draws early learning handwriting badges like in the Pinterest guide
+    // Complete Numbered Starting Points for Every Letter Style
     function drawStrokeBadges(letter, minX, maxX, minY, maxY) {
       gCtx.setLineDash([]);
       const midX = (minX + maxX) / 2;
       const midY = (minY + maxY) / 2;
 
-      // Badge helper: Draws numbered circle with arrow
-      function renderBadge(num, x, y, arrowText, adx, ady) {
-        // Circle
+      function renderBadge(num, x, y, arrow, ax, ay) {
         gCtx.beginPath();
-        gCtx.arc(x, y, 11, 0, Math.PI * 2);
+        gCtx.arc(x, y, 10.5, 0, Math.PI * 2);
         gCtx.fillStyle = '#0984e3';
         gCtx.fill();
         gCtx.lineWidth = 2;
         gCtx.strokeStyle = '#ffffff';
         gCtx.stroke();
 
-        // Number Text
         gCtx.font = 'bold 12px sans-serif';
         gCtx.fillStyle = '#ffffff';
         gCtx.textAlign = 'center';
         gCtx.textBaseline = 'middle';
         gCtx.fillText(num, x, y + 0.5);
 
-        // Arrow Pointer
-        if (arrowText) {
-          gCtx.font = 'bold 14px sans-serif';
+        if (arrow) {
+          gCtx.font = 'bold 13px sans-serif';
           gCtx.fillStyle = '#d63031';
-          gCtx.fillText(arrowText, x + adx, y + ady);
+          gCtx.fillText(arrow, x + ax, y + ay);
         }
       }
 
-      // Letter-specific badge locations
+      // Exact Letter Badges (A - Z, Devanagari)
       if (letter === 'A') {
         renderBadge('1', midX - 6, minY + 12, '↙', -16, 16);
         renderBadge('2', midX + 6, minY + 12, '↘', 16, 16);
         renderBadge('3', minX + (maxX - minX) * 0.28, midY + 12, '➔', 22, 0);
       } else if (letter === 'B') {
-        renderBadge('1', minX + 8, minY + 10, '↓', 0, 20);
-        renderBadge('2', minX + 26, minY + 8, '↷', 18, 12);
-        renderBadge('3', minX + 26, midY + 4, '↷', 18, 12);
+        renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
+        renderBadge('2', minX + 28, minY + 8, '↷', 18, 10);
+        renderBadge('3', minX + 28, midY + 4, '↷', 18, 10);
       } else if (letter === 'C') {
-        renderBadge('1', maxX - 12, minY + 18, '↶', -18, 10);
+        renderBadge('1', maxX - 12, minY + 16, '↶', -18, 8);
       } else if (letter === 'D') {
-        renderBadge('1', minX + 8, minY + 10, '↓', 0, 20);
-        renderBadge('2', minX + 26, minY + 8, '↷', 20, 16);
+        renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
+        renderBadge('2', minX + 28, minY + 8, '↷', 20, 14);
+      } else if (letter === 'E') {
+        renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
+        renderBadge('2', minX + 28, minY + 6, '➔', 18, 0);
+        renderBadge('3', minX + 28, midY + 2, '➔', 18, 0);
+        renderBadge('4', minX + 28, maxY - 6, '➔', 18, 0);
+      } else if (letter === 'F') {
+        renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
+        renderBadge('2', minX + 28, minY + 6, '➔', 18, 0);
+        renderBadge('3', minX + 28, midY + 2, '➔', 18, 0);
+      } else if (letter === 'G') {
+        renderBadge('1', maxX - 12, minY + 16, '↶', -18, 8);
+        renderBadge('2', maxX - 10, midY + 6, '←', -16, 0);
+      } else if (letter === 'H') {
+        renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
+        renderBadge('2', maxX - 8, minY + 10, '↓', 0, 18);
+        renderBadge('3', minX + 20, midY + 2, '➔', 18, 0);
       } else if (currentLang !== 'en') {
-        // Devanagari Letters: 1 on Left, 2 on Middle, 3 on Top Shirorekha Bar
-        renderBadge('1', minX + 14, minY + 26, '↷', 16, 14);
-        renderBadge('2', midX + 8, minY + 16, '↓', 0, 20);
-        renderBadge('3', minX + 8, minY + 6, '➔', 20, 0);
+        renderBadge('1', minX + 12, minY + 24, '↷', 16, 12);
+        renderBadge('2', midX + 6, minY + 14, '↓', 0, 18);
+        renderBadge('3', minX + 6, minY + 4, '➔', 18, 0);
       } else {
-        // Default Single Stroke Badge
         renderBadge('1', minX + 10, minY + 12, '↓', 0, 18);
       }
     }
 
-    // --- Particle Effects ---
     function spawnSparkles(x, y) {
       for (let i = 0; i < 3; i++) {
         particles.push({
@@ -680,7 +695,6 @@
     }
     requestAnimationFrame(animateParticles);
 
-    // --- Web Audio Chime ---
     function playCelebrationChime() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -700,7 +714,6 @@
       } catch (e) {}
     }
 
-    // --- Speech Synthesis ---
     function speakText(text, langCode, rate = 0.75, onEndCallback = null) {
       if (!('speechSynthesis' in window)) return;
 
@@ -731,7 +744,6 @@
       });
     }
 
-    // --- Drawing Controls ---
     function getPointerPos(e) {
       const rect = dCanvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
