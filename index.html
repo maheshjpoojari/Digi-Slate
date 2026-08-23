@@ -20,7 +20,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 10px 14px;
+      padding: 6px 12px;
       color: #2f3e46;
       touch-action: none;
     }
@@ -31,11 +31,11 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     header h1 {
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       color: #333;
     }
 
@@ -47,8 +47,8 @@
 
     .lang-btn {
       flex: 1;
-      padding: 8px;
-      font-size: 1rem;
+      padding: 7px;
+      font-size: 0.95rem;
       font-weight: bold;
       border: 3px solid transparent;
       border-radius: 14px;
@@ -70,8 +70,8 @@
       justify-content: space-between;
       width: 100%;
       background: #ffffff;
-      padding: 6px 14px;
-      border-radius: 20px;
+      padding: 4px 12px;
+      border-radius: 18px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.06);
     }
 
@@ -79,12 +79,12 @@
       background: #74b9ff;
       border: none;
       color: white;
-      font-size: 1.3rem;
-      width: 40px;
-      height: 40px;
+      font-size: 1.2rem;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       cursor: pointer;
-      box-shadow: 0 4px #0984e3;
+      box-shadow: 0 3px #0984e3;
     }
 
     .nav-arrow:active {
@@ -93,17 +93,18 @@
     }
 
     .current-letter-display {
-      font-size: 1.45rem;
+      font-size: 1.35rem;
       font-weight: bold;
       color: #2d3436;
     }
 
+    /* Maximized Canvas Area */
     .canvas-wrapper {
       position: relative;
       width: 100%;
-      aspect-ratio: 4 / 4.4;
+      aspect-ratio: 4 / 5.4;
       background: #ffffff;
-      border-radius: 26px;
+      border-radius: 24px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       border: 6px solid #ffeaa7;
       overflow: hidden;
@@ -126,12 +127,12 @@
       justify-content: center;
       gap: 12px;
       width: 100%;
-      padding: 4px 0;
+      padding: 2px 0;
     }
 
     .crayon {
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: 3px solid white;
       box-shadow: 0 3px 6px rgba(0,0,0,0.18);
@@ -146,7 +147,7 @@
 
     .progress-bar-container {
       width: 100%;
-      height: 12px;
+      height: 10px;
       background: #dfe6e9;
       border-radius: 10px;
       overflow: hidden;
@@ -161,13 +162,13 @@
 
     .action-row {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       width: 100%;
     }
 
     .action-btn {
       flex: 1;
-      padding: 10px;
+      padding: 9px;
       font-size: 0.95rem;
       font-weight: bold;
       border: none;
@@ -208,36 +209,36 @@
     }
 
     .celebration-letter {
-      font-size: 4.6rem;
+      font-size: 5rem;
       font-weight: 900;
       color: #ff7675;
       line-height: 1;
     }
 
     .celebration-emoji {
-      font-size: 5.5rem;
+      font-size: 6rem;
       line-height: 1;
       animation: pulseBounce 0.9s infinite alternate ease-in-out;
     }
 
     .celebration-word {
-      font-size: 2.5rem;
+      font-size: 2.8rem;
       font-weight: 800;
       color: #2d3436;
       line-height: 1.1;
     }
 
     .celebration-sub {
-      font-size: 1.45rem;
+      font-size: 1.55rem;
       color: #0984e3;
       font-weight: bold;
     }
 
     .celebration-timer-text {
-      font-size: 0.95rem;
+      font-size: 1rem;
       color: #2d3436;
       background: #ffeaa7;
-      padding: 5px 18px;
+      padding: 5px 20px;
       border-radius: 18px;
       font-weight: bold;
     }
@@ -483,12 +484,13 @@
       pCtx.clearRect(0, 0, width, height);
       particles = [];
 
-      const fontSize = Math.min(width, height) * 0.78;
+      // Expanded font sizing scaled to taller vertical space
+      const fontSize = Math.min(width * 0.88, height * 0.72);
       const fontStr = `bold ${fontSize}px sans-serif`;
       const centerX = width / 2;
-      const centerY = height / 2 + 4;
+      const centerY = height / 2 + 6;
 
-      // 1. Render Clean Hollow Track using Mask Buffer
+      // 1. Clean Hollow Track Buffer
       const maskCanvas = document.createElement('canvas');
       maskCanvas.width = width;
       maskCanvas.height = height;
@@ -500,24 +502,24 @@
 
       mCtx.lineJoin = 'round';
       mCtx.lineCap = 'round';
-      mCtx.lineWidth = 42;
+      mCtx.lineWidth = 44;
       mCtx.strokeStyle = '#2d3436';
       mCtx.strokeText(item.letter, centerX, centerY);
       mCtx.fillStyle = '#2d3436';
       mCtx.fillText(item.letter, centerX, centerY);
 
       mCtx.globalCompositeOperation = 'destination-out';
-      mCtx.lineWidth = 36;
+      mCtx.lineWidth = 38;
       mCtx.strokeText(item.letter, centerX, centerY);
       mCtx.fillText(item.letter, centerX, centerY);
 
       gCtx.drawImage(maskCanvas, 0, 0);
 
-      // 2. Crisp Center Dashed Guideline
+      // 2. Dashed Guideline
       gCtx.font = fontStr;
       gCtx.textAlign = 'center';
       gCtx.textBaseline = 'middle';
-      gCtx.setLineDash([8, 10]);
+      gCtx.setLineDash([9, 11]);
       gCtx.lineWidth = 3.5;
       gCtx.strokeStyle = '#74b9ff';
       gCtx.strokeText(item.letter, centerX, centerY);
@@ -582,99 +584,182 @@
       drawStrokeBadges(letter, minX, maxX, minY, maxY);
     }
 
-    // Authentic Devanagari & Latin Stroke Order Rules
+    // High-Visibility Numbered Badges & Drawn Directional Vector Arrows
     function drawStrokeBadges(letter, minX, maxX, minY, maxY) {
       gCtx.setLineDash([]);
       const midX = (minX + maxX) / 2;
       const midY = (minY + maxY) / 2;
 
-      function renderBadge(num, x, y, arrow, ax, ay) {
+      // Draws numbered blue pill badge
+      function drawBadge(num, x, y) {
         gCtx.beginPath();
-        gCtx.arc(x, y, 10.5, 0, Math.PI * 2);
+        gCtx.arc(x, y, 12.5, 0, Math.PI * 2);
         gCtx.fillStyle = '#0984e3';
         gCtx.fill();
-        gCtx.lineWidth = 2;
+        gCtx.lineWidth = 2.5;
         gCtx.strokeStyle = '#ffffff';
         gCtx.stroke();
 
-        gCtx.font = 'bold 12px sans-serif';
+        gCtx.font = 'bold 14px sans-serif';
         gCtx.fillStyle = '#ffffff';
         gCtx.textAlign = 'center';
         gCtx.textBaseline = 'middle';
         gCtx.fillText(num, x, y + 0.5);
-
-        if (arrow) {
-          gCtx.font = 'bold 13px sans-serif';
-          gCtx.fillStyle = '#d63031';
-          gCtx.fillText(arrow, x + ax, y + ay);
-        }
       }
 
-      // --- 1. Authentic Devanagari Rules (Hindi / Marathi) ---
+      // Draws bold red directional stroke arrow
+      function drawArrow(fromX, fromY, toX, toY) {
+        const headlen = 13;
+        const angle = Math.atan2(toY - fromY, toX - fromX);
+        
+        gCtx.beginPath();
+        gCtx.moveTo(fromX, fromY);
+        gCtx.lineTo(toX, toY);
+        gCtx.strokeStyle = '#d63031';
+        gCtx.lineWidth = 3.5;
+        gCtx.lineCap = 'round';
+        gCtx.stroke();
+
+        // Arrow head
+        gCtx.beginPath();
+        gCtx.moveTo(toX, toY);
+        gCtx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+        gCtx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+        gCtx.lineTo(toX, toY);
+        gCtx.fillStyle = '#d63031';
+        gCtx.fill();
+      }
+
+      // Curved Arc Arrow for loops/curves
+      function drawArcArrow(cx, cy, radius, startAngle, endAngle) {
+        gCtx.beginPath();
+        gCtx.arc(cx, cy, radius, startAngle, endAngle, false);
+        gCtx.strokeStyle = '#d63031';
+        gCtx.lineWidth = 3.5;
+        gCtx.stroke();
+
+        // Arrow head at end of arc
+        const endX = cx + radius * Math.cos(endAngle);
+        const endY = cy + radius * Math.sin(endAngle);
+        const tangentAngle = endAngle + Math.PI / 2;
+        const headlen = 12;
+
+        gCtx.beginPath();
+        gCtx.moveTo(endX, endY);
+        gCtx.lineTo(endX - headlen * Math.cos(tangentAngle - Math.PI / 6), endY - headlen * Math.sin(tangentAngle - Math.PI / 6));
+        gCtx.lineTo(endX - headlen * Math.cos(tangentAngle + Math.PI / 6), endY - headlen * Math.sin(tangentAngle + Math.PI / 6));
+        gCtx.fillStyle = '#d63031';
+        gCtx.fill();
+      }
+
+      // --- 1. Devanagari Script (Hindi & Marathi) ---
       if (currentLang !== 'en') {
         if (['अ', 'आ', 'ओ', 'औ', 'अं', 'अः'].includes(letter)) {
-          // Rule: 1 Top curve, 2 Bottom curve, 3 Middle connector, 4 Vertical Spine, 5 Shirorekha
-          renderBadge('1', minX + 16, minY + (maxY - minY) * 0.22, '↷', 16, 8);
-          renderBadge('2', minX + 16, minY + (maxY - minY) * 0.52, '↷', 16, 8);
-          renderBadge('3', minX + (maxX - minX) * 0.38, midY + 4, '➔', 18, 0);
-          renderBadge('4', maxX - 22, minY + 16, '↓', 0, 18);
-          renderBadge('5', minX + 10, minY + 4, '➔', 20, 0);
+          drawBadge('1', minX + 16, minY + (maxY - minY) * 0.22);
+          drawArcArrow(minX + 38, minY + (maxY - minY) * 0.22, 22, -Math.PI / 2, Math.PI / 3);
+
+          drawBadge('2', minX + 16, minY + (maxY - minY) * 0.52);
+          drawArcArrow(minX + 38, minY + (maxY - minY) * 0.56, 24, -Math.PI / 2, Math.PI / 3);
+
+          drawBadge('3', minX + (maxX - minX) * 0.38, midY + 4);
+          drawArrow(minX + (maxX - minX) * 0.44, midY + 4, minX + (maxX - minX) * 0.68, midY + 4);
+
+          drawBadge('4', maxX - 20, minY + 16);
+          drawArrow(maxX - 20, minY + 32, maxX - 20, maxY - 20);
+
+          drawBadge('5', minX + 10, minY + 4);
+          drawArrow(minX + 26, minY + 4, maxX - 6, minY + 4);
         } else if (['क'].includes(letter)) {
-          // Rule: 1 Vertical Spine, 2 Left closed loop, 3 Right open curve, 4 Shirorekha
-          renderBadge('1', midX, minY + 16, '↓', 0, 18);
-          renderBadge('2', minX + 14, midY - 6, '↺', 14, 10);
-          renderBadge('3', maxX - 14, midY + 4, '↷', 14, 10);
-          renderBadge('4', minX + 10, minY + 4, '➔', 20, 0);
+          drawBadge('1', midX, minY + 16);
+          drawArrow(midX, minY + 32, midX, maxY - 20);
+
+          drawBadge('2', minX + 16, midY - 6);
+          drawArcArrow(minX + 36, midY - 6, 18, 0, Math.PI * 1.5);
+
+          drawBadge('3', maxX - 16, midY + 4);
+          drawArcArrow(midX + 28, midY + 12, 18, -Math.PI / 2, Math.PI / 3);
+
+          drawBadge('4', minX + 10, minY + 4);
+          drawArrow(minX + 26, minY + 4, maxX - 6, minY + 4);
         } else if (['ग', 'म', 'न', 'त', 'प'].includes(letter)) {
-          // Rule: 1 Left feature/loop, 2 Vertical spine, 3 Shirorekha
-          renderBadge('1', minX + 16, minY + 24, '↓', 0, 18);
-          renderBadge('2', maxX - 18, minY + 16, '↓', 0, 18);
-          renderBadge('3', minX + 8, minY + 4, '➔', 20, 0);
-        } else if (['ट', 'ठ', 'ड', 'ढ', 'इ', 'ई'].includes(letter)) {
-          // Rule: 1 Short neck, 2 Main curve, 3 Shirorekha
-          renderBadge('1', midX, minY + 10, '↓', 0, 14);
-          renderBadge('2', minX + 16, minY + (maxY - minY) * 0.38, '↷', 16, 12);
-          renderBadge('3', minX + 8, minY + 4, '➔', 20, 0);
+          drawBadge('1', minX + 16, minY + 24);
+          drawArrow(minX + 16, minY + 40, minX + 16, maxY - 35);
+
+          drawBadge('2', maxX - 18, minY + 16);
+          drawArrow(maxX - 18, minY + 32, maxX - 18, maxY - 20);
+
+          drawBadge('3', minX + 8, minY + 4);
+          drawArrow(minX + 24, minY + 4, maxX - 6, minY + 4);
         } else {
-          // Standard Devanagari Default: 1 Body, 2 Spine, 3 Top Shirorekha
-          renderBadge('1', minX + 16, minY + 26, '↷', 16, 12);
-          renderBadge('2', maxX - 18, minY + 16, '↓', 0, 18);
-          renderBadge('3', minX + 8, minY + 4, '➔', 20, 0);
+          drawBadge('1', minX + 16, minY + 26);
+          drawArrow(minX + 16, minY + 42, minX + 16, maxY - 28);
+
+          drawBadge('2', maxX - 18, minY + 16);
+          drawArrow(maxX - 18, minY + 32, maxX - 18, maxY - 20);
+
+          drawBadge('3', minX + 8, minY + 4);
+          drawArrow(minX + 24, minY + 4, maxX - 6, minY + 4);
         }
       } 
-      // --- 2. Latin English Alphabet Rules ---
+      // --- 2. Latin English Script ---
       else {
         if (letter === 'A') {
-          renderBadge('1', midX - 6, minY + 12, '↙', -16, 16);
-          renderBadge('2', midX + 6, minY + 12, '↘', 16, 16);
-          renderBadge('3', minX + (maxX - minX) * 0.28, midY + 12, '➔', 22, 0);
+          drawBadge('1', midX - 8, minY + 12);
+          drawArrow(midX - 18, minY + 26, minX + 12, maxY - 12);
+
+          drawBadge('2', midX + 8, minY + 12);
+          drawArrow(midX + 18, minY + 26, maxX - 12, maxY - 12);
+
+          drawBadge('3', minX + (maxX - minX) * 0.28, midY + 14);
+          drawArrow(minX + (maxX - minX) * 0.36, midY + 14, minX + (maxX - minX) * 0.72, midY + 14);
         } else if (letter === 'B') {
-          renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
-          renderBadge('2', minX + 28, minY + 8, '↷', 18, 10);
-          renderBadge('3', minX + 28, midY + 4, '↷', 18, 10);
+          drawBadge('1', minX + 8, minY + 10);
+          drawArrow(minX + 8, minY + 26, minX + 8, maxY - 14);
+
+          drawBadge('2', minX + 30, minY + 8);
+          drawArcArrow(midX + 8, minY + (maxY - minY) * 0.26, 26, -Math.PI / 2, Math.PI / 2);
+
+          drawBadge('3', minX + 30, midY + 4);
+          drawArcArrow(midX + 8, minY + (maxY - minY) * 0.72, 28, -Math.PI / 2, Math.PI / 2);
         } else if (letter === 'C') {
-          renderBadge('1', maxX - 12, minY + 16, '↶', -18, 8);
+          drawBadge('1', maxX - 12, minY + 16);
+          drawArcArrow(midX, midY, (maxX - minX) * 0.44, -Math.PI / 4, Math.PI * 0.85);
         } else if (letter === 'D') {
-          renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
-          renderBadge('2', minX + 28, minY + 8, '↷', 20, 14);
+          drawBadge('1', minX + 8, minY + 10);
+          drawArrow(minX + 8, minY + 26, minX + 8, maxY - 14);
+
+          drawBadge('2', minX + 30, minY + 8);
+          drawArcArrow(midX + 4, midY, (maxX - minX) * 0.46, -Math.PI / 2, Math.PI / 2);
         } else if (letter === 'E') {
-          renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
-          renderBadge('2', minX + 28, minY + 6, '➔', 18, 0);
-          renderBadge('3', minX + 28, midY + 2, '➔', 18, 0);
-          renderBadge('4', minX + 28, maxY - 6, '➔', 18, 0);
+          drawBadge('1', minX + 8, minY + 10);
+          drawArrow(minX + 8, minY + 26, minX + 8, maxY - 14);
+
+          drawBadge('2', minX + 30, minY + 6);
+          drawArrow(minX + 44, minY + 6, maxX - 10, minY + 6);
+
+          drawBadge('3', minX + 30, midY + 2);
+          drawArrow(minX + 44, midY + 2, maxX - 28, midY + 2);
+
+          drawBadge('4', minX + 30, maxY - 6);
+          drawArrow(minX + 44, maxY - 6, maxX - 10, maxY - 6);
         } else if (letter === 'F') {
-          renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
-          renderBadge('2', minX + 28, minY + 6, '➔', 18, 0);
-          renderBadge('3', minX + 28, midY + 2, '➔', 18, 0);
+          drawBadge('1', minX + 8, minY + 10);
+          drawArrow(minX + 8, minY + 26, minX + 8, maxY - 14);
+
+          drawBadge('2', minX + 30, minY + 6);
+          drawArrow(minX + 44, minY + 6, maxX - 10, minY + 6);
+
+          drawBadge('3', minX + 30, midY + 2);
+          drawArrow(minX + 44, midY + 2, maxX - 28, midY + 2);
         } else if (letter === 'G') {
-          renderBadge('1', maxX - 12, minY + 16, '↶', -18, 8);
-          renderBadge('2', maxX - 10, midY + 6, '←', -16, 0);
-        } else if (letter === 'H') {
-          renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
-          renderBadge('2', maxX - 8, minY + 10, '↓', 0, 18);
-          renderBadge('3', minX + 20, midY + 2, '➔', 18, 0);
+          drawBadge('1', maxX - 12, minY + 16);
+          drawArcArrow(midX, midY, (maxX - minX) * 0.44, -Math.PI / 4, Math.PI * 0.85);
+
+          drawBadge('2', maxX - 8, midY + 6);
+          drawArrow(maxX - 8, midY + 6, midX + 10, midY + 6);
         } else {
-          renderBadge('1', minX + 10, minY + 12, '↓', 0, 18);
+          drawBadge('1', minX + 10, minY + 12);
+          drawArrow(minX + 10, minY + 28, minX + 10, maxY - 14);
         }
       }
     }
@@ -866,7 +951,7 @@
       const rect = dCanvas.getBoundingClientRect();
       const width = rect.width;
       const height = rect.height;
-      const fontSize = Math.min(width, height) * 0.78;
+      const fontSize = Math.min(width * 0.88, height * 0.72);
 
       dCtx.clearRect(0, 0, width, height);
       dCtx.font = `bold ${fontSize}px sans-serif`;
@@ -875,7 +960,7 @@
       dCtx.fillStyle = activeCrayon;
       dCtx.shadowColor = activeCrayon;
       dCtx.shadowBlur = 14;
-      dCtx.fillText(item.letter, width / 2, height / 2 + 4);
+      dCtx.fillText(item.letter, width / 2, height / 2 + 6);
       dCtx.shadowBlur = 0;
     }
 
