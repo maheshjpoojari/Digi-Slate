@@ -469,7 +469,6 @@
       el.classList.add('selected');
     }
 
-    // Clean Track Rendering: Eliminates internal overlapping black artifacts
     function renderLetter() {
       if (autoNextTimer) clearTimeout(autoNextTimer);
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -499,7 +498,6 @@
       mCtx.textAlign = 'center';
       mCtx.textBaseline = 'middle';
 
-      // Outer Thick Line
       mCtx.lineJoin = 'round';
       mCtx.lineCap = 'round';
       mCtx.lineWidth = 42;
@@ -508,13 +506,11 @@
       mCtx.fillStyle = '#2d3436';
       mCtx.fillText(item.letter, centerX, centerY);
 
-      // Hollow Out the Middle (Removes all overlapping internal lines)
       mCtx.globalCompositeOperation = 'destination-out';
       mCtx.lineWidth = 36;
       mCtx.strokeText(item.letter, centerX, centerY);
       mCtx.fillText(item.letter, centerX, centerY);
 
-      // Draw Hollow Shell to main canvas
       gCtx.drawImage(maskCanvas, 0, 0);
 
       // 2. Crisp Center Dashed Guideline
@@ -526,7 +522,6 @@
       gCtx.strokeStyle = '#74b9ff';
       gCtx.strokeText(item.letter, centerX, centerY);
 
-      // Map Points & Draw Numbered Badges
       mapLetterPointsAndBadges(item.letter, width, height, fontSize, centerX, centerY);
 
       document.getElementById('letter-title').textContent = `${item.letter} - ${item.word}`;
@@ -587,7 +582,7 @@
       drawStrokeBadges(letter, minX, maxX, minY, maxY);
     }
 
-    // Complete Numbered Starting Points for Every Letter Style
+    // Authentic Devanagari & Latin Stroke Order Rules
     function drawStrokeBadges(letter, minX, maxX, minY, maxY) {
       gCtx.setLineDash([]);
       const midX = (minX + maxX) / 2;
@@ -615,42 +610,72 @@
         }
       }
 
-      // Exact Letter Badges (A - Z, Devanagari)
-      if (letter === 'A') {
-        renderBadge('1', midX - 6, minY + 12, '↙', -16, 16);
-        renderBadge('2', midX + 6, minY + 12, '↘', 16, 16);
-        renderBadge('3', minX + (maxX - minX) * 0.28, midY + 12, '➔', 22, 0);
-      } else if (letter === 'B') {
-        renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
-        renderBadge('2', minX + 28, minY + 8, '↷', 18, 10);
-        renderBadge('3', minX + 28, midY + 4, '↷', 18, 10);
-      } else if (letter === 'C') {
-        renderBadge('1', maxX - 12, minY + 16, '↶', -18, 8);
-      } else if (letter === 'D') {
-        renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
-        renderBadge('2', minX + 28, minY + 8, '↷', 20, 14);
-      } else if (letter === 'E') {
-        renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
-        renderBadge('2', minX + 28, minY + 6, '➔', 18, 0);
-        renderBadge('3', minX + 28, midY + 2, '➔', 18, 0);
-        renderBadge('4', minX + 28, maxY - 6, '➔', 18, 0);
-      } else if (letter === 'F') {
-        renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
-        renderBadge('2', minX + 28, minY + 6, '➔', 18, 0);
-        renderBadge('3', minX + 28, midY + 2, '➔', 18, 0);
-      } else if (letter === 'G') {
-        renderBadge('1', maxX - 12, minY + 16, '↶', -18, 8);
-        renderBadge('2', maxX - 10, midY + 6, '←', -16, 0);
-      } else if (letter === 'H') {
-        renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
-        renderBadge('2', maxX - 8, minY + 10, '↓', 0, 18);
-        renderBadge('3', minX + 20, midY + 2, '➔', 18, 0);
-      } else if (currentLang !== 'en') {
-        renderBadge('1', minX + 12, minY + 24, '↷', 16, 12);
-        renderBadge('2', midX + 6, minY + 14, '↓', 0, 18);
-        renderBadge('3', minX + 6, minY + 4, '➔', 18, 0);
-      } else {
-        renderBadge('1', minX + 10, minY + 12, '↓', 0, 18);
+      // --- 1. Authentic Devanagari Rules (Hindi / Marathi) ---
+      if (currentLang !== 'en') {
+        if (['अ', 'आ', 'ओ', 'औ', 'अं', 'अः'].includes(letter)) {
+          // Rule: 1 Top curve, 2 Bottom curve, 3 Middle connector, 4 Vertical Spine, 5 Shirorekha
+          renderBadge('1', minX + 16, minY + (maxY - minY) * 0.22, '↷', 16, 8);
+          renderBadge('2', minX + 16, minY + (maxY - minY) * 0.52, '↷', 16, 8);
+          renderBadge('3', minX + (maxX - minX) * 0.38, midY + 4, '➔', 18, 0);
+          renderBadge('4', maxX - 22, minY + 16, '↓', 0, 18);
+          renderBadge('5', minX + 10, minY + 4, '➔', 20, 0);
+        } else if (['क'].includes(letter)) {
+          // Rule: 1 Vertical Spine, 2 Left closed loop, 3 Right open curve, 4 Shirorekha
+          renderBadge('1', midX, minY + 16, '↓', 0, 18);
+          renderBadge('2', minX + 14, midY - 6, '↺', 14, 10);
+          renderBadge('3', maxX - 14, midY + 4, '↷', 14, 10);
+          renderBadge('4', minX + 10, minY + 4, '➔', 20, 0);
+        } else if (['ग', 'म', 'न', 'त', 'प'].includes(letter)) {
+          // Rule: 1 Left feature/loop, 2 Vertical spine, 3 Shirorekha
+          renderBadge('1', minX + 16, minY + 24, '↓', 0, 18);
+          renderBadge('2', maxX - 18, minY + 16, '↓', 0, 18);
+          renderBadge('3', minX + 8, minY + 4, '➔', 20, 0);
+        } else if (['ट', 'ठ', 'ड', 'ढ', 'इ', 'ई'].includes(letter)) {
+          // Rule: 1 Short neck, 2 Main curve, 3 Shirorekha
+          renderBadge('1', midX, minY + 10, '↓', 0, 14);
+          renderBadge('2', minX + 16, minY + (maxY - minY) * 0.38, '↷', 16, 12);
+          renderBadge('3', minX + 8, minY + 4, '➔', 20, 0);
+        } else {
+          // Standard Devanagari Default: 1 Body, 2 Spine, 3 Top Shirorekha
+          renderBadge('1', minX + 16, minY + 26, '↷', 16, 12);
+          renderBadge('2', maxX - 18, minY + 16, '↓', 0, 18);
+          renderBadge('3', minX + 8, minY + 4, '➔', 20, 0);
+        }
+      } 
+      // --- 2. Latin English Alphabet Rules ---
+      else {
+        if (letter === 'A') {
+          renderBadge('1', midX - 6, minY + 12, '↙', -16, 16);
+          renderBadge('2', midX + 6, minY + 12, '↘', 16, 16);
+          renderBadge('3', minX + (maxX - minX) * 0.28, midY + 12, '➔', 22, 0);
+        } else if (letter === 'B') {
+          renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
+          renderBadge('2', minX + 28, minY + 8, '↷', 18, 10);
+          renderBadge('3', minX + 28, midY + 4, '↷', 18, 10);
+        } else if (letter === 'C') {
+          renderBadge('1', maxX - 12, minY + 16, '↶', -18, 8);
+        } else if (letter === 'D') {
+          renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
+          renderBadge('2', minX + 28, minY + 8, '↷', 20, 14);
+        } else if (letter === 'E') {
+          renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
+          renderBadge('2', minX + 28, minY + 6, '➔', 18, 0);
+          renderBadge('3', minX + 28, midY + 2, '➔', 18, 0);
+          renderBadge('4', minX + 28, maxY - 6, '➔', 18, 0);
+        } else if (letter === 'F') {
+          renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
+          renderBadge('2', minX + 28, minY + 6, '➔', 18, 0);
+          renderBadge('3', minX + 28, midY + 2, '➔', 18, 0);
+        } else if (letter === 'G') {
+          renderBadge('1', maxX - 12, minY + 16, '↶', -18, 8);
+          renderBadge('2', maxX - 10, midY + 6, '←', -16, 0);
+        } else if (letter === 'H') {
+          renderBadge('1', minX + 8, minY + 10, '↓', 0, 18);
+          renderBadge('2', maxX - 8, minY + 10, '↓', 0, 18);
+          renderBadge('3', minX + 20, midY + 2, '➔', 18, 0);
+        } else {
+          renderBadge('1', minX + 10, minY + 12, '↓', 0, 18);
+        }
       }
     }
 
