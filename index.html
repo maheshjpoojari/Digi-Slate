@@ -469,12 +469,11 @@
       el.classList.add('selected');
     }
 
-    // Auto-fit calculation to prevent wide characters (आ, ओ, ऋ) from overflowing canvas bounds
     function calculateBestFontSize(letter, width, height) {
       let size = Math.min(width * 0.70, height * 0.62);
       gCtx.font = `bold ${size}px sans-serif`;
       let textWidth = gCtx.measureText(letter).width;
-      const maxAllowedWidth = width - 68; // 34px safe side margins
+      const maxAllowedWidth = width - 68;
 
       if (textWidth > maxAllowedWidth) {
         size = size * (maxAllowedWidth / textWidth);
@@ -501,7 +500,7 @@
       const centerX = width / 2;
       const centerY = height / 2 + 4;
 
-      // 1. Hollow Track Shell (No Overlapping Artifacts)
+      // 1. Hollow Track Shell
       const maskCanvas = document.createElement('canvas');
       maskCanvas.width = width;
       maskCanvas.height = height;
@@ -595,7 +594,7 @@
       drawAnatomicalStrokes(letter, minX, maxX, minY, maxY);
     }
 
-    // High-Precision Directional Arrows & Badges tailored per Letter Structure
+    // Complete Devanagari & Latin Stroke Engine with Curved Directional Arrows
     function drawAnatomicalStrokes(letter, minX, maxX, minY, maxY) {
       gCtx.setLineDash([]);
       const midX = (minX + maxX) / 2;
@@ -660,61 +659,96 @@
 
       // --- 1. Devanagari Script (Hindi & Marathi) ---
       if (currentLang !== 'en') {
-        if (['क'].includes(letter)) {
-          // 1: Center Spine Down
+        // Group A: 'S' Curve Letters (इ, ई, ड, ङ, झ, ज्ञ, ऋ, ह)
+        if (['इ', 'ई', 'ड', 'ङ', 'झ', 'ज्ञ', 'ऋ', 'ह'].includes(letter)) {
+          // 1: Neck down
           renderBadge('1', midX, minY + 14);
-          drawArrow(midX, minY + 26, midX, maxY - 16);
-          // 2: Left Loop (Counter-Clockwise)
-          renderBadge('2', minX + 16, midY - 14);
-          drawArcArrow(minX + 34, midY - 6, 18, 0, Math.PI * 1.5, true);
-          // 3: Right Hook (Downward Curve)
-          renderBadge('3', maxX - 14, midY + 4);
-          drawArcArrow(midX + 22, midY + 14, 20, -Math.PI / 2, Math.PI / 3, false);
+          drawArrow(midX, minY + 26, midX, minY + (maxY - minY) * 0.28);
+          // 2: Top Loop Right
+          renderBadge('2', minX + 16, minY + (maxY - minY) * 0.32);
+          drawArcArrow(midX + 2, minY + (maxY - minY) * 0.36, 20, -Math.PI / 2, Math.PI / 3, false);
+          // 3: Bottom Loop Left & Tail Hook
+          renderBadge('3', maxX - 18, minY + (maxY - minY) * 0.58);
+          drawArcArrow(midX - 2, minY + (maxY - minY) * 0.68, 22, -Math.PI / 4, Math.PI * 0.75, true);
           // 4: Top Shirorekha
-          renderBadge('4', minX + 12, minY + 6);
-          drawArrow(minX + 24, minY + 6, maxX - 10, minY + 6);
-        } else if (['अ', 'आ', 'ओ', 'औ', 'अं', 'अः'].includes(letter)) {
-          // 1: Top Curve
+          renderBadge('4', minX + 10, minY + 6);
+          drawArrow(minX + 22, minY + 6, maxX - 8, minY + 6);
+          // For 'ई', show upper matra curve
+          if (letter === 'ई') {
+            renderBadge('5', midX + 12, minY - 10);
+            drawArcArrow(midX + 26, minY - 6, 16, Math.PI, Math.PI * 1.8, false);
+          }
+        }
+        // Group B: '3' Curve Vowels (अ, आ, उ, ऊ, ओ, औ, अं, अः)
+        else if (['अ', 'आ', 'उ', 'ऊ', 'ओ', 'औ', 'अं', 'अः'].includes(letter)) {
+          // 1: Upper Curve
           renderBadge('1', minX + 16, minY + (maxY - minY) * 0.22);
           drawArcArrow(minX + 34, minY + (maxY - minY) * 0.24, 20, -Math.PI / 2, Math.PI / 3, false);
-          // 2: Bottom Curve
+          // 2: Lower Curve
           renderBadge('2', minX + 16, minY + (maxY - minY) * 0.54);
           drawArcArrow(minX + 34, minY + (maxY - minY) * 0.56, 22, -Math.PI / 2, Math.PI / 3, false);
-          // 3: Middle Bar
-          renderBadge('3', minX + (maxX - minX) * 0.38, midY + 4);
-          drawArrow(minX + (maxX - minX) * 0.44, midY + 4, minX + (maxX - minX) * 0.65, midY + 4);
-          // 4: Vertical Stem
-          renderBadge('4', maxX - 20, minY + 16);
-          drawArrow(maxX - 20, minY + 28, maxX - 20, maxY - 16);
-          // 5: Top Shirorekha
-          renderBadge('5', minX + 10, minY + 6);
-          drawArrow(minX + 22, minY + 6, maxX - 8, minY + 6);
-        } else if (['उ', 'ऊ'].includes(letter)) {
-          // 1: Top Curve
-          renderBadge('1', minX + 16, minY + (maxY - minY) * 0.32);
-          drawArcArrow(minX + 34, minY + (maxY - minY) * 0.34, 22, -Math.PI / 2, Math.PI / 3, false);
-          // 2: Bottom Curve
-          renderBadge('2', minX + 16, minY + (maxY - minY) * 0.64);
-          drawArcArrow(minX + 36, minY + (maxY - minY) * 0.66, 24, -Math.PI / 2, Math.PI / 3, false);
-          // 3: Top Shirorekha
+          // Check if letter has middle connector & vertical spine
+          if (['अ', 'आ', 'ओ', 'औ', 'अं', 'अः'].includes(letter)) {
+            renderBadge('3', minX + (maxX - minX) * 0.38, midY + 4);
+            drawArrow(minX + (maxX - minX) * 0.44, midY + 4, minX + (maxX - minX) * 0.65, midY + 4);
+            renderBadge('4', maxX - 20, minY + 16);
+            drawArrow(maxX - 20, minY + 28, maxX - 20, maxY - 16);
+            renderBadge('5', minX + 10, minY + 6);
+            drawArrow(minX + 22, minY + 6, maxX - 8, minY + 6);
+          } else {
+            // For उ / ऊ: Top Shirorekha
+            renderBadge('3', minX + 10, minY + 6);
+            drawArrow(minX + 22, minY + 6, maxX - 8, minY + 6);
+          }
+        }
+        // Group C: 'C' Curve Letters (ट, ठ, ढ, द)
+        else if (['ट', 'ठ', 'ढ', 'द'].includes(letter)) {
+          renderBadge('1', midX, minY + 14);
+          drawArrow(midX, minY + 26, midX, minY + (maxY - minY) * 0.30);
+          renderBadge('2', minX + 16, minY + (maxY - minY) * 0.45);
+          drawArcArrow(midX, midY + 6, (maxX - minX) * 0.42, -Math.PI / 2, Math.PI * 0.85, false);
           renderBadge('3', minX + 10, minY + 6);
           drawArrow(minX + 22, minY + 6, maxX - 8, minY + 6);
-        } else if (['ग', 'म', 'न', 'त', 'प', 'घ', 'च', 'ख', 'य'].includes(letter)) {
+        }
+        // Group D: 'क'
+        else if (letter === 'क') {
+          renderBadge('1', midX, minY + 14);
+          drawArrow(midX, minY + 26, midX, maxY - 16);
+          renderBadge('2', minX + 16, midY - 14);
+          drawArcArrow(minX + 34, midY - 6, 18, 0, Math.PI * 1.5, true);
+          renderBadge('3', maxX - 14, midY + 4);
+          drawArcArrow(midX + 22, midY + 14, 20, -Math.PI / 2, Math.PI / 3, false);
+          renderBadge('4', minX + 12, minY + 6);
+          drawArrow(minX + 24, minY + 6, maxX - 10, minY + 6);
+        }
+        // Group E: Double-Curve Letters (घ, छ, ध, थ)
+        else if (['घ', 'छ', 'ध', 'थ'].includes(letter)) {
+          renderBadge('1', minX + 16, minY + (maxY - minY) * 0.24);
+          drawArcArrow(minX + 32, minY + (maxY - minY) * 0.26, 18, -Math.PI / 2, Math.PI / 3, false);
+          renderBadge('2', minX + 16, minY + (maxY - minY) * 0.52);
+          drawArcArrow(minX + 32, minY + (maxY - minY) * 0.54, 20, -Math.PI / 2, Math.PI / 3, false);
+          renderBadge('3', maxX - 18, minY + 16);
+          drawArrow(maxX - 18, minY + 28, maxX - 18, maxY - 16);
+          renderBadge('4', minX + 10, minY + 6);
+          drawArrow(minX + 22, minY + 6, maxX - 8, minY + 6);
+        }
+        // Group F: Marathi ळ
+        else if (letter === 'ळ') {
+          renderBadge('1', minX + 16, midY);
+          drawArcArrow(minX + 32, midY + 6, 18, 0, Math.PI * 1.5, true);
+          renderBadge('2', midX + 6, midY);
+          drawArcArrow(midX + 22, midY + 6, 18, 0, Math.PI * 1.5, true);
+          renderBadge('3', maxX - 18, minY + 16);
+          drawArrow(maxX - 18, minY + 28, maxX - 18, maxY - 16);
+          renderBadge('4', minX + 10, minY + 6);
+          drawArrow(minX + 22, minY + 6, maxX - 8, minY + 6);
+        }
+        // Default Devanagari (Spine + Loops: ग, म, न, त, प, व, ब, etc.)
+        else {
           renderBadge('1', minX + 16, minY + 24);
           drawArrow(minX + 16, minY + 36, minX + 16, maxY - 24);
-
           renderBadge('2', maxX - 18, minY + 16);
           drawArrow(maxX - 18, minY + 28, maxX - 18, maxY - 16);
-
-          renderBadge('3', minX + 10, minY + 6);
-          drawArrow(minX + 22, minY + 6, maxX - 8, minY + 6);
-        } else {
-          renderBadge('1', minX + 16, minY + 24);
-          drawArrow(minX + 16, minY + 36, minX + 16, maxY - 20);
-
-          renderBadge('2', maxX - 18, minY + 16);
-          drawArrow(maxX - 18, minY + 28, maxX - 18, maxY - 16);
-
           renderBadge('3', minX + 10, minY + 6);
           drawArrow(minX + 22, minY + 6, maxX - 8, minY + 6);
         }
@@ -724,19 +758,15 @@
         if (letter === 'A') {
           renderBadge('1', midX - 8, minY + 12);
           drawArrow(midX - 16, minY + 24, minX + 12, maxY - 12);
-
           renderBadge('2', midX + 8, minY + 12);
           drawArrow(midX + 16, minY + 24, maxX - 12, maxY - 12);
-
           renderBadge('3', minX + (maxX - minX) * 0.28, midY + 12);
           drawArrow(minX + (maxX - minX) * 0.36, midY + 12, minX + (maxX - minX) * 0.72, midY + 12);
         } else if (letter === 'B') {
           renderBadge('1', minX + 10, minY + 10);
           drawArrow(minX + 10, minY + 22, minX + 10, maxY - 14);
-
           renderBadge('2', minX + 28, minY + 8);
           drawArcArrow(midX + 8, minY + (maxY - minY) * 0.28, 24, -Math.PI / 2, Math.PI / 2);
-
           renderBadge('3', minX + 28, midY + 4);
           drawArcArrow(midX + 8, minY + (maxY - minY) * 0.72, 26, -Math.PI / 2, Math.PI / 2);
         } else if (letter === 'C') {
@@ -745,14 +775,11 @@
         } else if (letter === 'D') {
           renderBadge('1', minX + 10, minY + 10);
           drawArrow(minX + 10, minY + 22, minX + 10, maxY - 14);
-
           renderBadge('2', minX + 28, minY + 8);
           drawArcArrow(midX + 4, midY, (maxX - minX) * 0.46, -Math.PI / 2, Math.PI / 2);
         } else if (letter === 'G') {
-          // Curved Body C sweep
           renderBadge('1', maxX - 14, minY + 18);
           drawArcArrow(midX, midY, (maxX - minX) * 0.44, -Math.PI / 4, Math.PI * 0.78, true);
-          // Inner Shelf
           renderBadge('2', maxX - 8, midY + 4);
           drawArrow(maxX - 8, midY + 4, midX + 6, midY + 4);
         } else if (letter === 'J') {
@@ -762,13 +789,10 @@
         } else if (letter === 'M') {
           renderBadge('1', minX + 10, minY + 10);
           drawArrow(minX + 10, minY + 22, minX + 10, maxY - 14);
-
           renderBadge('2', minX + 14, minY + 12);
           drawArrow(minX + 20, minY + 18, midX, maxY - 20);
-
           renderBadge('3', maxX - 14, minY + 12);
           drawArrow(maxX - 20, minY + 18, midX, maxY - 20);
-
           renderBadge('4', maxX - 10, minY + 10);
           drawArrow(maxX - 10, minY + 22, maxX - 10, maxY - 14);
         } else {
