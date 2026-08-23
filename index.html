@@ -98,7 +98,6 @@
       color: #2d3436;
     }
 
-    /* Expanded Canvas Area utilizing bottom space */
     .canvas-wrapper {
       position: relative;
       width: 100%;
@@ -159,7 +158,6 @@
     .btn-clear { background: #fab1a0; color: #d63031; }
     .btn-sound { background: #ffeaa7; color: #d35400; }
 
-    /* Enlarged Celebration Overlay Card */
     .celebration-overlay {
       position: absolute;
       inset: 0;
@@ -247,7 +245,6 @@
     <div class="canvas-wrapper">
       <canvas id="traceCanvas"></canvas>
       
-      <!-- Word Card Pop-up with Larger Typography -->
       <div class="celebration-overlay" id="celebrationCard">
         <div class="celebration-letter" id="vocab-letter">A</div>
         <div class="celebration-emoji" id="vocab-emoji">🍎</div>
@@ -325,7 +322,6 @@
 
       ctx.clearRect(0, 0, width, height);
 
-      // Expanded font sizing to give maximum room for finger tracing
       const fontSize = Math.min(width, height) * 0.78;
       ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.textAlign = 'center';
@@ -349,6 +345,7 @@
       isCompleted = false;
     }
 
+    // 3x3 Spatial Grid Isolation (Ensures middle crossbars & internal loops get their own zone)
     function mapLetterPoints(letter, width, height, fontSize) {
       const offCanvas = document.createElement('canvas');
       offCanvas.width = width;
@@ -380,23 +377,26 @@
 
       if (allTargetPoints.length === 0) return;
 
+      // 3 Columns x 3 Rows = 9 Distinct Spatial Cells
       strokeClusters = [];
-      const midX = (minX + maxX) / 2;
+      const stepX = (maxX - minX) / 3;
       const stepY = (maxY - minY) / 3;
 
-      const zoneBins = [[], [], [], [], [], []];
-      allTargetPoints.forEach(pt => {
-        const row = Math.min(2, Math.floor((pt.y - minY) / stepY));
-        const col = pt.x <= midX ? 0 : 1;
-        const binIndex = row * 2 + col;
-        zoneBins[binIndex].push(pt);
-      });
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          const x0 = minX + c * stepX;
+          const x1 = (c === 2) ? maxX + 1 : x0 + stepX;
+          const y0 = minY + r * stepY;
+          const y1 = (r === 2) ? maxY + 1 : y0 + stepY;
 
-      zoneBins.forEach(bin => {
-        if (bin.length >= 6) {
-          strokeClusters.push(bin);
+          const ptsInCell = allTargetPoints.filter(p => p.x >= x0 && p.x < x1 && p.y >= y0 && p.y < y1);
+
+          // Only keep zones that contain meaningful strokes (min 5 points)
+          if (ptsInCell.length >= 5) {
+            strokeClusters.push(ptsInCell);
+          }
         }
-      });
+      }
     }
 
     function speakText(text, langCode, rate = 0.75, onEndCallback = null) {
@@ -474,7 +474,7 @@
       ctx.lineTo(x, y);
       ctx.stroke();
 
-      const touchRadiusSq = 26 * 26;
+      const touchRadiusSq = 24 * 24;
       allTargetPoints.forEach(pt => {
         if (!pt.hit) {
           const dx = pt.x - x;
@@ -498,22 +498,22 @@
       const totalHits = allTargetPoints.filter(p => p.hit).length;
       const overallRatio = totalHits / allTargetPoints.length;
 
+      // 100% Segment Check: EVERY active 3x3 cell (including middle crossbars) must have at least 50% coverage
       let allSegmentsDone = true;
       strokeClusters.forEach(cluster => {
         const clusterHits = cluster.filter(p => p.hit).length;
-        if (clusterHits / cluster.length < 0.55) {
+        if (clusterHits / cluster.length < 0.50) {
           allSegmentsDone = false;
         }
       });
 
+      // Child must cover overall letter >= 82% AND have drawn across all distinct parts
       if (overallRatio >= 0.82 && allSegmentsDone) {
         isCompleted = true;
         document.getElementById('progressBar').style.width = '100%';
         
-        // Step 1: Reveal clean digital letter on canvas first
         revealDigitalLetter();
 
-        // Step 2: Show celebration card and play phonetic sound after 1.2s
         setTimeout(() => {
           triggerCelebration();
         }, 1200);
@@ -527,7 +527,6 @@
       const height = rect.height;
       const fontSize = Math.min(width, height) * 0.78;
 
-      // Clean canvas and display sharp digital letter
       ctx.clearRect(0, 0, width, height);
       ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.textAlign = 'center';
