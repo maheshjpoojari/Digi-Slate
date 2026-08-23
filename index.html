@@ -20,7 +20,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 10px 14px;
+      padding: 8px 12px;
       color: #2f3e46;
       touch-action: none;
     }
@@ -31,11 +31,11 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     header h1 {
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       color: #333;
     }
 
@@ -47,8 +47,8 @@
 
     .lang-btn {
       flex: 1;
-      padding: 8px;
-      font-size: 1rem;
+      padding: 7px;
+      font-size: 0.95rem;
       font-weight: bold;
       border: 3px solid transparent;
       border-radius: 14px;
@@ -70,8 +70,8 @@
       justify-content: space-between;
       width: 100%;
       background: #ffffff;
-      padding: 6px 14px;
-      border-radius: 20px;
+      padding: 4px 12px;
+      border-radius: 18px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.06);
     }
 
@@ -79,12 +79,12 @@
       background: #74b9ff;
       border: none;
       color: white;
-      font-size: 1.3rem;
-      width: 40px;
-      height: 40px;
+      font-size: 1.2rem;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       cursor: pointer;
-      box-shadow: 0 4px #0984e3;
+      box-shadow: 0 3px #0984e3;
     }
 
     .nav-arrow:active {
@@ -93,18 +93,17 @@
     }
 
     .current-letter-display {
-      font-size: 1.45rem;
+      font-size: 1.35rem;
       font-weight: bold;
       color: #2d3436;
     }
 
-    /* Balanced Canvas Dimensions */
     .canvas-wrapper {
       position: relative;
       width: 100%;
-      aspect-ratio: 1 / 1.08;
+      aspect-ratio: 1 / 1.1;
       background: #ffffff;
-      border-radius: 26px;
+      border-radius: 24px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       border: 6px solid #ffeaa7;
       overflow: hidden;
@@ -127,12 +126,12 @@
       justify-content: center;
       gap: 12px;
       width: 100%;
-      padding: 4px 0;
+      padding: 2px 0;
     }
 
     .crayon {
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: 3px solid white;
       box-shadow: 0 3px 6px rgba(0,0,0,0.18);
@@ -147,7 +146,7 @@
 
     .progress-bar-container {
       width: 100%;
-      height: 12px;
+      height: 10px;
       background: #dfe6e9;
       border-radius: 10px;
       overflow: hidden;
@@ -162,13 +161,13 @@
 
     .action-row {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       width: 100%;
     }
 
     .action-btn {
       flex: 1;
-      padding: 10px;
+      padding: 9px;
       font-size: 0.95rem;
       font-weight: bold;
       border: none;
@@ -209,36 +208,36 @@
     }
 
     .celebration-letter {
-      font-size: 4.8rem;
+      font-size: 5rem;
       font-weight: 900;
       color: #ff7675;
       line-height: 1;
     }
 
     .celebration-emoji {
-      font-size: 5.8rem;
+      font-size: 6rem;
       line-height: 1;
       animation: pulseBounce 0.9s infinite alternate ease-in-out;
     }
 
     .celebration-word {
-      font-size: 2.6rem;
+      font-size: 2.8rem;
       font-weight: 800;
       color: #2d3436;
       line-height: 1.1;
     }
 
     .celebration-sub {
-      font-size: 1.5rem;
+      font-size: 1.55rem;
       color: #0984e3;
       font-weight: bold;
     }
 
     .celebration-timer-text {
-      font-size: 0.95rem;
+      font-size: 1rem;
       color: #2d3436;
       background: #ffeaa7;
-      padding: 5px 18px;
+      padding: 5px 20px;
       border-radius: 18px;
       font-weight: bold;
     }
@@ -470,12 +469,12 @@
       el.classList.add('selected');
     }
 
-    // Dynamic Font Calculation to guarantee zero clipping on wide Devanagari characters
+    // Auto-fit calculation to prevent wide characters (आ, ओ, ऋ) from overflowing canvas bounds
     function calculateBestFontSize(letter, width, height) {
-      let size = Math.min(width * 0.72, height * 0.64);
+      let size = Math.min(width * 0.70, height * 0.62);
       gCtx.font = `bold ${size}px sans-serif`;
       let textWidth = gCtx.measureText(letter).width;
-      const maxAllowedWidth = width - 64; // Guaranteed 32px safe side padding
+      const maxAllowedWidth = width - 68; // 34px safe side margins
 
       if (textWidth > maxAllowedWidth) {
         size = size * (maxAllowedWidth / textWidth);
@@ -502,7 +501,7 @@
       const centerX = width / 2;
       const centerY = height / 2 + 4;
 
-      // 1. Clean Hollow Writing Track Buffer
+      // 1. Hollow Track Shell (No Overlapping Artifacts)
       const maskCanvas = document.createElement('canvas');
       maskCanvas.width = width;
       maskCanvas.height = height;
@@ -527,7 +526,7 @@
 
       gCtx.drawImage(maskCanvas, 0, 0);
 
-      // 2. Crisp Centered Dotted Guideline
+      // 2. Centered Dotted Blue Path
       gCtx.font = fontStr;
       gCtx.textAlign = 'center';
       gCtx.textBaseline = 'middle';
@@ -593,11 +592,11 @@
         }
       }
 
-      drawStrokeBadges(letter, minX, maxX, minY, maxY);
+      drawAnatomicalStrokes(letter, minX, maxX, minY, maxY);
     }
 
-    // Clear, clean numbered starting badges without cross-screen lines
-    function drawStrokeBadges(letter, minX, maxX, minY, maxY) {
+    // High-Precision Directional Arrows & Badges tailored per Letter Structure
+    function drawAnatomicalStrokes(letter, minX, maxX, minY, maxY) {
       gCtx.setLineDash([]);
       const midX = (minX + maxX) / 2;
       const midY = (minY + maxY) / 2;
@@ -618,72 +617,163 @@
         gCtx.fillText(num, x, y + 0.5);
       }
 
-      // 1. Devanagari Character Rules
+      function drawArrow(fromX, fromY, toX, toY) {
+        const headlen = 11;
+        const angle = Math.atan2(toY - fromY, toX - fromX);
+
+        gCtx.beginPath();
+        gCtx.moveTo(fromX, fromY);
+        gCtx.lineTo(toX, toY);
+        gCtx.strokeStyle = '#d63031';
+        gCtx.lineWidth = 3;
+        gCtx.lineCap = 'round';
+        gCtx.stroke();
+
+        gCtx.beginPath();
+        gCtx.moveTo(toX, toY);
+        gCtx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+        gCtx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+        gCtx.lineTo(toX, toY);
+        gCtx.fillStyle = '#d63031';
+        gCtx.fill();
+      }
+
+      function drawArcArrow(cx, cy, r, startAngle, endAngle, counterClockwise = false) {
+        gCtx.beginPath();
+        gCtx.arc(cx, cy, r, startAngle, endAngle, counterClockwise);
+        gCtx.strokeStyle = '#d63031';
+        gCtx.lineWidth = 3;
+        gCtx.stroke();
+
+        const endX = cx + r * Math.cos(endAngle);
+        const endY = cy + r * Math.sin(endAngle);
+        const tangent = endAngle + (counterClockwise ? -Math.PI / 2 : Math.PI / 2);
+        const headlen = 10;
+
+        gCtx.beginPath();
+        gCtx.moveTo(endX, endY);
+        gCtx.lineTo(endX - headlen * Math.cos(tangent - Math.PI / 6), endY - headlen * Math.sin(tangent - Math.PI / 6));
+        gCtx.lineTo(endX - headlen * Math.cos(tangent + Math.PI / 6), endY - headlen * Math.sin(tangent + Math.PI / 6));
+        gCtx.fillStyle = '#d63031';
+        gCtx.fill();
+      }
+
+      // --- 1. Devanagari Script (Hindi & Marathi) ---
       if (currentLang !== 'en') {
-        if (['अ', 'आ', 'ओ', 'औ', 'अं', 'अः'].includes(letter)) {
-          renderBadge('1', minX + 18, minY + (maxY - minY) * 0.24);
-          renderBadge('2', minX + 18, minY + (maxY - minY) * 0.58);
-          renderBadge('3', minX + (maxX - minX) * 0.40, midY + 4);
+        if (['क'].includes(letter)) {
+          // 1: Center Spine Down
+          renderBadge('1', midX, minY + 14);
+          drawArrow(midX, minY + 26, midX, maxY - 16);
+          // 2: Left Loop (Counter-Clockwise)
+          renderBadge('2', minX + 16, midY - 14);
+          drawArcArrow(minX + 34, midY - 6, 18, 0, Math.PI * 1.5, true);
+          // 3: Right Hook (Downward Curve)
+          renderBadge('3', maxX - 14, midY + 4);
+          drawArcArrow(midX + 22, midY + 14, 20, -Math.PI / 2, Math.PI / 3, false);
+          // 4: Top Shirorekha
+          renderBadge('4', minX + 12, minY + 6);
+          drawArrow(minX + 24, minY + 6, maxX - 10, minY + 6);
+        } else if (['अ', 'आ', 'ओ', 'औ', 'अं', 'अः'].includes(letter)) {
+          // 1: Top Curve
+          renderBadge('1', minX + 16, minY + (maxY - minY) * 0.22);
+          drawArcArrow(minX + 34, minY + (maxY - minY) * 0.24, 20, -Math.PI / 2, Math.PI / 3, false);
+          // 2: Bottom Curve
+          renderBadge('2', minX + 16, minY + (maxY - minY) * 0.54);
+          drawArcArrow(minX + 34, minY + (maxY - minY) * 0.56, 22, -Math.PI / 2, Math.PI / 3, false);
+          // 3: Middle Bar
+          renderBadge('3', minX + (maxX - minX) * 0.38, midY + 4);
+          drawArrow(minX + (maxX - minX) * 0.44, midY + 4, minX + (maxX - minX) * 0.65, midY + 4);
+          // 4: Vertical Stem
           renderBadge('4', maxX - 20, minY + 16);
-          renderBadge('5', minX + 14, minY + 6);
-        } else if (['क'].includes(letter)) {
-          renderBadge('1', midX, minY + 16);
-          renderBadge('2', minX + 16, midY - 6);
-          renderBadge('3', maxX - 16, midY + 6);
-          renderBadge('4', minX + 14, minY + 6);
+          drawArrow(maxX - 20, minY + 28, maxX - 20, maxY - 16);
+          // 5: Top Shirorekha
+          renderBadge('5', minX + 10, minY + 6);
+          drawArrow(minX + 22, minY + 6, maxX - 8, minY + 6);
+        } else if (['उ', 'ऊ'].includes(letter)) {
+          // 1: Top Curve
+          renderBadge('1', minX + 16, minY + (maxY - minY) * 0.32);
+          drawArcArrow(minX + 34, minY + (maxY - minY) * 0.34, 22, -Math.PI / 2, Math.PI / 3, false);
+          // 2: Bottom Curve
+          renderBadge('2', minX + 16, minY + (maxY - minY) * 0.64);
+          drawArcArrow(minX + 36, minY + (maxY - minY) * 0.66, 24, -Math.PI / 2, Math.PI / 3, false);
+          // 3: Top Shirorekha
+          renderBadge('3', minX + 10, minY + 6);
+          drawArrow(minX + 22, minY + 6, maxX - 8, minY + 6);
         } else if (['ग', 'म', 'न', 'त', 'प', 'घ', 'च', 'ख', 'य'].includes(letter)) {
-          renderBadge('1', minX + 16, minY + 26);
+          renderBadge('1', minX + 16, minY + 24);
+          drawArrow(minX + 16, minY + 36, minX + 16, maxY - 24);
+
           renderBadge('2', maxX - 18, minY + 16);
-          renderBadge('3', minX + 14, minY + 6);
-        } else if (['ट', 'ठ', 'ड', 'ढ', 'इ', 'ई', 'ऋ', 'उ', 'ऊ'].includes(letter)) {
-          renderBadge('1', midX, minY + 10);
-          renderBadge('2', minX + 16, minY + (maxY - minY) * 0.45);
-          renderBadge('3', minX + 14, minY + 6);
+          drawArrow(maxX - 18, minY + 28, maxX - 18, maxY - 16);
+
+          renderBadge('3', minX + 10, minY + 6);
+          drawArrow(minX + 22, minY + 6, maxX - 8, minY + 6);
         } else {
-          renderBadge('1', minX + 16, minY + 26);
+          renderBadge('1', minX + 16, minY + 24);
+          drawArrow(minX + 16, minY + 36, minX + 16, maxY - 20);
+
           renderBadge('2', maxX - 18, minY + 16);
-          renderBadge('3', minX + 14, minY + 6);
+          drawArrow(maxX - 18, minY + 28, maxX - 18, maxY - 16);
+
+          renderBadge('3', minX + 10, minY + 6);
+          drawArrow(minX + 22, minY + 6, maxX - 8, minY + 6);
         }
       } 
-      // 2. English Alphabet Rules
+      // --- 2. English Alphabet Rules ---
       else {
         if (letter === 'A') {
-          renderBadge('1', midX - 8, minY + 14);
-          renderBadge('2', midX + 8, minY + 14);
-          renderBadge('3', minX + (maxX - minX) * 0.32, midY + 12);
+          renderBadge('1', midX - 8, minY + 12);
+          drawArrow(midX - 16, minY + 24, minX + 12, maxY - 12);
+
+          renderBadge('2', midX + 8, minY + 12);
+          drawArrow(midX + 16, minY + 24, maxX - 12, maxY - 12);
+
+          renderBadge('3', minX + (maxX - minX) * 0.28, midY + 12);
+          drawArrow(minX + (maxX - minX) * 0.36, midY + 12, minX + (maxX - minX) * 0.72, midY + 12);
         } else if (letter === 'B') {
-          renderBadge('1', minX + 10, minY + 12);
-          renderBadge('2', minX + 30, minY + 10);
-          renderBadge('3', minX + 30, midY + 6);
+          renderBadge('1', minX + 10, minY + 10);
+          drawArrow(minX + 10, minY + 22, minX + 10, maxY - 14);
+
+          renderBadge('2', minX + 28, minY + 8);
+          drawArcArrow(midX + 8, minY + (maxY - minY) * 0.28, 24, -Math.PI / 2, Math.PI / 2);
+
+          renderBadge('3', minX + 28, midY + 4);
+          drawArcArrow(midX + 8, minY + (maxY - minY) * 0.72, 26, -Math.PI / 2, Math.PI / 2);
         } else if (letter === 'C') {
-          renderBadge('1', maxX - 12, minY + 16);
+          renderBadge('1', maxX - 14, minY + 18);
+          drawArcArrow(midX, midY, (maxX - minX) * 0.44, -Math.PI / 4, Math.PI * 0.85, true);
         } else if (letter === 'D') {
-          renderBadge('1', minX + 10, minY + 12);
-          renderBadge('2', minX + 30, minY + 10);
-        } else if (letter === 'E') {
-          renderBadge('1', minX + 10, minY + 12);
-          renderBadge('2', minX + 30, minY + 8);
-          renderBadge('3', minX + 30, midY + 2);
-          renderBadge('4', minX + 30, maxY - 8);
-        } else if (letter === 'F') {
-          renderBadge('1', minX + 10, minY + 12);
-          renderBadge('2', minX + 30, minY + 8);
-          renderBadge('3', minX + 30, midY + 2);
+          renderBadge('1', minX + 10, minY + 10);
+          drawArrow(minX + 10, minY + 22, minX + 10, maxY - 14);
+
+          renderBadge('2', minX + 28, minY + 8);
+          drawArcArrow(midX + 4, midY, (maxX - minX) * 0.46, -Math.PI / 2, Math.PI / 2);
         } else if (letter === 'G') {
-          renderBadge('1', maxX - 14, minY + 16);
-          renderBadge('2', maxX - 12, midY + 4);
-        } else if (letter === 'H') {
-          renderBadge('1', minX + 10, minY + 12);
-          renderBadge('2', maxX - 10, minY + 12);
-          renderBadge('3', minX + 22, midY + 2);
+          // Curved Body C sweep
+          renderBadge('1', maxX - 14, minY + 18);
+          drawArcArrow(midX, midY, (maxX - minX) * 0.44, -Math.PI / 4, Math.PI * 0.78, true);
+          // Inner Shelf
+          renderBadge('2', maxX - 8, midY + 4);
+          drawArrow(maxX - 8, midY + 4, midX + 6, midY + 4);
         } else if (letter === 'J') {
-          renderBadge('1', maxX - 12, minY + 10);
+          renderBadge('1', maxX - 16, minY + 10);
+          drawArrow(maxX - 16, minY + 22, maxX - 16, maxY - 30);
+          drawArcArrow(midX + 12, maxY - 30, 24, 0, Math.PI * 0.85, false);
         } else if (letter === 'M') {
-          renderBadge('1', minX + 10, minY + 12);
-          renderBadge('2', midX, midY + 20);
-          renderBadge('3', maxX - 10, minY + 12);
+          renderBadge('1', minX + 10, minY + 10);
+          drawArrow(minX + 10, minY + 22, minX + 10, maxY - 14);
+
+          renderBadge('2', minX + 14, minY + 12);
+          drawArrow(minX + 20, minY + 18, midX, maxY - 20);
+
+          renderBadge('3', maxX - 14, minY + 12);
+          drawArrow(maxX - 20, minY + 18, midX, maxY - 20);
+
+          renderBadge('4', maxX - 10, minY + 10);
+          drawArrow(maxX - 10, minY + 22, maxX - 10, maxY - 14);
         } else {
-          renderBadge('1', minX + 12, minY + 14);
+          renderBadge('1', minX + 10, minY + 12);
+          drawArrow(minX + 10, minY + 24, minX + 10, maxY - 14);
         }
       }
     }
