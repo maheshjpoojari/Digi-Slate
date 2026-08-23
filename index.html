@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kids Alphabet Tracing - English, Hindi & Marathi</title>
+  <style>
+    :root {
+      --primary: #ff6b6b;
+      --secondary: #4ecdc4;
+      --accent: #ffe66d;
+      --background: #f7fff7;
+      --text: #2f3e46;
+      --panel-bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', sans-serif;
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      color: var(--text);
+      touch-action: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header {
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      color: #333;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    /* Language Switcher */
+    .lang-tabs {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .lang-btn {
+      flex: 1;
+      padding: 10px 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      border: 3px solid transparent;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+      transition: all 0.2s ease;
+    }
+
+    .lang-btn.active {
+      background: #ff7675;
+      color: #fff;
+      border-color: #d63031;
+      transform: translateY(-2px);
+    }
+
+    /* Letter Carousel/Navigation */
+    .letter-picker {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: var(--panel-bg);
+      padding: 8px 16px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+
+    .nav-arrow {
+      background: #74b9ff;
+      border: none;
+      color: white;
+      font-size: 1.4rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 4px #0984e3;
+    }
+
+    .nav-arrow:active {
+      transform: translateY(4px);
+      box-shadow: none;
+    }
+
+    .current-letter-display {
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: #2d3436;
+    }
+
+    /* Canvas Card */
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border: 6px solid #ffeaa7;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    /* Progress & Controls */
+    .progress-bar-container {
+      width: 100%;
+      height: 14px;
+      background: #dfe6e9;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #00b894;
+      transition: width 0.15s ease-out;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px rgba(0,0,0,0.15);
+      transition: transform 0.1s;
+    }
+
+    .action-btn:active {
+      transform: translateY(3px);
+      box-shadow: none;
+    }
+
+    .btn-clear { background: #fab1a0; color: #d63031; }
+    .btn-sound { background: #ffeaa7; color: #d35400; }
+
+    /* Celebration & Word Popup */
+    .celebration-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 10;
+    }
+
+    .celebration-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .celebration-emoji {
+      font-size: 4.5rem;
+      animation: bounce 0.8s infinite alternate ease-in-out;
+    }
+
+    .celebration-word {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #2d3436;
+      margin-top: 8px;
+    }
+
+    .celebration-sub {
+      font-size: 1.1rem;
+      color: #636e72;
+      margin-top: 4px;
+    }
+
+    @keyframes bounce {
+      from { transform: scale(0.9); }
+      to { transform: scale(1.15); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>🎨 Magic Trace</h1>
+    </header>
+
+    <!-- Language Selector -->
+    <div class="lang-tabs">
+      <button class="lang-btn active" onclick="switchLanguage('en')">English</button>
+      <button class="lang-btn" onclick="switchLanguage('hi')">हिंदी</button>
+      <button class="lang-btn" onclick="switchLanguage('mr')">मराठी</button>
+    </div>
+
+    <!-- Letter Selector -->
+    <div class="letter-picker">
+      <button class="nav-arrow" onclick="prevLetter()">◀</button>
+      <div class="current-letter-display" id="letter-title">A for Apple</div>
+      <button class="nav-arrow" onclick="nextLetter()">▶</button>
+    </div>
+
+    <!-- Tracing Canvas -->
+    <div class="canvas-wrapper">
+      <canvas id="traceCanvas"></canvas>
+      
+      <!-- Word card pop-up on completion -->
+      <div class="celebration-overlay" id="celebrationCard">
+        <div class="celebration-emoji" id="vocab-emoji">🍎</div>
+        <div class="celebration-word" id="vocab-word">Apple</div>
+        <div class="celebration-sub" id="vocab-phonics">"A" is for Apple</div>
+      </div>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="progress-bar-container">
+      <div class="progress-fill" id="progressBar"></div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-row">
+      <button class="action-btn btn-clear" onclick="clearCanvas()">🔄 Clear</button>
+      <button class="action-btn btn-sound" onclick="playCurrentAudio()">🔊 Hear Sound</button>
+    </div>
+  </div>
+
+  <script>
+    // --- Letter Datasets ---
+    const datasets = {
+      en: [
+        { letter: 'A', word: 'Apple', phonic: 'A for Apple', emoji: '🍎', langCode: 'en-US' },
+        { letter: 'B', word: 'Ball', phonic: 'B for Ball', emoji: '⚽', langCode: 'en-US' },
+        { letter: 'C', word: 'Cat', phonic: 'C for Cat', emoji: '🐱', langCode: 'en-US' },
+        { letter: 'D', word: 'Dog', phonic: 'D for Dog', emoji: '🐶', langCode: 'en-US' }
+      ],
+      hi: [
+        { letter: 'अ', word: 'अनार', phonic: 'अ से अनार', emoji: '🍈', langCode: 'hi-IN' },
+        { letter: 'आ', word: 'आम', phonic: 'आ से आम', emoji: '🥭', langCode: 'hi-IN' },
+        { letter: 'इ', word: 'इमली', phonic: 'इ से इमली', emoji: '🫘', langCode: 'hi-IN' },
+        { letter: 'क', word: 'कमल', phonic: 'क से कमल', emoji: '🪷', langCode: 'hi-IN' }
+      ],
+      mr: [
+        { letter: 'अ', word: 'अननस', phonic: 'अ - अननस', emoji: '🍍', langCode: 'mr-IN' },
+        { letter: 'क', word: 'कमळ', phonic: 'क - कमळ', emoji: '🪷', langCode: 'mr-IN' },
+        { letter: 'घ', word: 'घर', phonic: 'घ - घर', emoji: '🏠', langCode: 'mr-IN' },
+        { letter: 'ळ', word: 'बाळ', phonic: 'ळ - बाळ', emoji: '👶', langCode: 'mr-IN' }
+      ]
+    };
+
+    let currentLang = 'en';
+    let currentIndex = 0;
+    let isDrawing = false;
+    let isCompleted = false;
+
+    const canvas = document.getElementById('traceCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    let targetPixelCount = 0;
+    let matchedPixels = new Set();
+
+    // Resize canvas based on client display
+    function initCanvasSize() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      renderLetter();
+    }
+
+    function getCurrentItem() {
+      return datasets[currentLang][currentIndex];
+    }
+
+    // Render dotted guide letter and map target points for collision
+    function renderLetter() {
+      const item = getCurrentItem();
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+
+      ctx.clearRect(0, 0, width, height);
+
+      // Setup font
+      const fontSize = Math.min(width, height) * 0.65;
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Draw dotted guide letter
+      ctx.setLineDash([8, 12]);
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = '#b2bec3';
+      ctx.strokeText(item.letter, width / 2, height / 2 + 10);
+
+      // Light background fill for visual aid
+      ctx.fillStyle = 'rgba(238, 238, 238, 0.5)';
+      ctx.fillText(item.letter, width / 2, height / 2 + 10);
+
+      // Pre-calculate target mask points
+      mapTargetPixels(item.letter, width, height, fontSize);
+
+      // Update UI displays
+      document.getElementById('letter-title').textContent = `${item.letter} - ${item.word}`;
+      document.getElementById('progressBar').style.width = '0%';
+      document.getElementById('celebrationCard').classList.remove('show');
+      isCompleted = false;
+      matchedPixels.clear();
+    }
+
+    // Sample the pixels forming the letter to compute tracing coverage
+    function mapTargetPixels(letter, width, height, fontSize) {
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = width;
+      offCanvas.height = height;
+      const offCtx = offCanvas.getContext('2d');
+
+      offCtx.font = `bold ${fontSize}px sans-serif`;
+      offCtx.textAlign = 'center';
+      offCtx.textBaseline = 'middle';
+      offCtx.fillText(letter, width / 2, height / 2 + 10);
+
+      const imgData = offCtx.getImageData(0, 0, width, height).data;
+      targetPixelCount = 0;
+
+      // Sample every 8th pixel to optimize performance
+      for (let y = 0; y < height; y += 8) {
+        for (let x = 0; x < width; x += 8) {
+          const index = (y * width + x) * 4;
+          if (imgData[index + 3] > 128) {
+            targetPixelCount++;
+          }
+        }
+      }
+    }
+
+    // Speech Synthesis
+    function speak(text, langCode) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel(); // Stop active audio
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = langCode;
+      utterance.rate = 0.85; // Slightly slower for kids
+      utterance.pitch = 1.1;
+
+      // Check for matching system voice
+      const voices = window.speechSynthesis.getVoices();
+      const matchedVoice = voices.find(v => v.lang.startsWith(langCode.slice(0, 2)));
+      if (matchedVoice) utterance.voice = matchedVoice;
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function playCurrentAudio() {
+      const item = getCurrentItem();
+      speak(item.phonic, item.langCode);
+    }
+
+    // --- Tracing & Touch Handlers ---
+    function getPointerPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function startDrawing(e) {
+      if (isCompleted) return;
+      isDrawing = true;
+      const pos = getPointerPos(e);
+      drawStroke(pos.x, pos.y, false);
+    }
+
+    function draw(e) {
+      if (!isDrawing || isCompleted) return;
+      e.preventDefault();
+      const pos = getPointerPos(e);
+      drawStroke(pos.x, pos.y, true);
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+      ctx.beginPath();
+    }
+
+    function drawStroke(x, y, isMoving) {
+      // Draw smooth brush line
+      ctx.setLineDash([]);
+      ctx.lineWidth = 26; // Generous width for small fingers
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#ff7675';
+
+      if (!isMoving) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      }
+      ctx.lineTo(x, y);
+      ctx.stroke();
+
+      // Check hit-area coverage
+      const gridX = Math.floor(x / 8) * 8;
+      const gridY = Math.floor(y / 8) * 8;
+      const key = `${gridX},${gridY}`;
+
+      if (!matchedPixels.has(key)) {
+        matchedPixels.add(key);
+        updateProgress();
+      }
+    }
+
+    function updateProgress() {
+      if (targetPixelCount === 0) return;
+      const progress = Math.min(100, Math.round((matchedPixels.size / (targetPixelCount * 0.75)) * 100));
+      document.getElementById('progressBar').style.width = `${progress}%`;
+
+      // Trigger completion at 75% coverage
+      if (progress >= 75 && !isCompleted) {
+        triggerSuccess();
+      }
+    }
+
+    function triggerSuccess() {
+      isCompleted = true;
+      const item = getCurrentItem();
+
+      // Show word card
+      document.getElementById('vocab-emoji').textContent = item.emoji;
+      document.getElementById('vocab-word').textContent = item.word;
+      document.getElementById('vocab-phonics').textContent = item.phonic;
+      document.getElementById('celebrationCard').classList.add('show');
+
+      // Play phonetic voice
+      playCurrentAudio();
+    }
+
+    // --- Controls & Switching ---
+    function switchLanguage(lang) {
+      currentLang = lang;
+      currentIndex = 0;
+      document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      renderLetter();
+    }
+
+    function nextLetter() {
+      currentIndex = (currentIndex + 1) % datasets[currentLang].length;
+      renderLetter();
+    }
+
+    function prevLetter() {
+      currentIndex = (currentIndex - 1 + datasets[currentLang].length) % datasets[currentLang].length;
+      renderLetter();
+    }
+
+    function clearCanvas() {
+      renderLetter();
+    }
+
+    // Event Listeners for Touch and Mouse
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', stopDrawing);
+
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    window.addEventListener('touchend', stopDrawing);
+
+    window.addEventListener('resize', initCanvasSize);
+    window.addEventListener('DOMContentLoaded', () => {
+      // Chrome requires user interaction or voiceschanged event to populate voices
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {};
+      }
+      initCanvasSize();
+    });
+  </script>
+</body>
+</html>
