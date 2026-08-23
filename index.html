@@ -3,17 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kids Alphabet Tracing - English, Hindi & Marathi</title>
+  <title>Kids Alphabet Tracing</title>
   <style>
-    :root {
-      --primary: #ff6b6b;
-      --secondary: #4ecdc4;
-      --accent: #ffe66d;
-      --background: #f7fff7;
-      --text: #2f3e46;
-      --panel-bg: #ffffff;
-    }
-
     * {
       box-sizing: border-box;
       user-select: none;
@@ -30,27 +21,22 @@
       flex-direction: column;
       align-items: center;
       padding: 16px;
-      color: var(--text);
+      color: #2f3e46;
       touch-action: none;
     }
 
     .container {
       width: 100%;
-      max-width: 520px;
+      max-width: 480px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 12px;
     }
 
-    header {
-      text-align: center;
-    }
-
     header h1 {
       font-size: 1.8rem;
       color: #333;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     }
 
     /* Language Switcher */
@@ -58,20 +44,18 @@
       display: flex;
       gap: 8px;
       width: 100%;
-      justify-content: center;
     }
 
     .lang-btn {
       flex: 1;
-      padding: 10px 8px;
+      padding: 10px;
       font-size: 1rem;
       font-weight: bold;
       border: 3px solid transparent;
       border-radius: 16px;
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.85);
       cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.08);
-      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.06);
     }
 
     .lang-btn.active {
@@ -81,13 +65,13 @@
       transform: translateY(-2px);
     }
 
-    /* Letter Carousel/Navigation */
+    /* Navigation */
     .letter-picker {
       display: flex;
       align-items: center;
       justify-content: space-between;
       width: 100%;
-      background: var(--panel-bg);
+      background: #ffffff;
       padding: 8px 16px;
       border-radius: 20px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.06);
@@ -121,14 +105,11 @@
       position: relative;
       width: 100%;
       aspect-ratio: 1 / 1;
-      background: #fff;
+      background: #ffffff;
       border-radius: 28px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       border: 6px solid #ffeaa7;
       overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
     }
 
     canvas {
@@ -138,10 +119,9 @@
       width: 100%;
       height: 100%;
       touch-action: none;
-      cursor: crosshair;
     }
 
-    /* Progress & Controls */
+    /* Progress Bar */
     .progress-bar-container {
       width: 100%;
       height: 14px;
@@ -157,6 +137,7 @@
       transition: width 0.15s ease-out;
     }
 
+    /* Actions */
     .action-row {
       display: flex;
       gap: 12px;
@@ -171,55 +152,60 @@
       border: none;
       border-radius: 16px;
       cursor: pointer;
-      box-shadow: 0 4px rgba(0,0,0,0.15);
-      transition: transform 0.1s;
-    }
-
-    .action-btn:active {
-      transform: translateY(3px);
-      box-shadow: none;
+      box-shadow: 0 4px rgba(0,0,0,0.12);
     }
 
     .btn-clear { background: #fab1a0; color: #d63031; }
     .btn-sound { background: #ffeaa7; color: #d35400; }
 
-    /* Celebration & Word Popup */
+    /* Celebration Overlay Card */
     .celebration-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.96);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      border-radius: 24px;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s ease;
+      transform: scale(0.85);
+      transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       z-index: 10;
     }
 
     .celebration-overlay.show {
       opacity: 1;
+      transform: scale(1);
       pointer-events: auto;
     }
 
     .celebration-emoji {
-      font-size: 4.5rem;
-      animation: bounce 0.8s infinite alternate ease-in-out;
+      font-size: 5rem;
+      animation: bounce 0.6s infinite alternate ease-in-out;
     }
 
     .celebration-word {
-      font-size: 1.8rem;
+      font-size: 2.2rem;
       font-weight: bold;
       color: #2d3436;
       margin-top: 8px;
     }
 
     .celebration-sub {
-      font-size: 1.1rem;
-      color: #636e72;
+      font-size: 1.3rem;
+      color: #ff7675;
+      font-weight: bold;
       margin-top: 4px;
+    }
+
+    .auto-next-pill {
+      margin-top: 14px;
+      background: #e17055;
+      color: white;
+      font-size: 0.9rem;
+      padding: 4px 12px;
+      border-radius: 12px;
     }
 
     @keyframes bounce {
@@ -237,27 +223,28 @@
 
     <!-- Language Selector -->
     <div class="lang-tabs">
-      <button class="lang-btn active" onclick="switchLanguage('en')">English</button>
-      <button class="lang-btn" onclick="switchLanguage('hi')">हिंदी</button>
-      <button class="lang-btn" onclick="switchLanguage('mr')">मराठी</button>
+      <button class="lang-btn active" onclick="switchLanguage('en', event)">English</button>
+      <button class="lang-btn" onclick="switchLanguage('hi', event)">हिंदी</button>
+      <button class="lang-btn" onclick="switchLanguage('mr', event)">मराठी</button>
     </div>
 
     <!-- Letter Selector -->
     <div class="letter-picker">
       <button class="nav-arrow" onclick="prevLetter()">◀</button>
-      <div class="current-letter-display" id="letter-title">A for Apple</div>
+      <div class="current-letter-display" id="letter-title">A - Apple</div>
       <button class="nav-arrow" onclick="nextLetter()">▶</button>
     </div>
 
-    <!-- Tracing Canvas -->
+    <!-- Canvas Wrapper -->
     <div class="canvas-wrapper">
       <canvas id="traceCanvas"></canvas>
       
-      <!-- Word card pop-up on completion -->
+      <!-- Celebratory Popup Overlay -->
       <div class="celebration-overlay" id="celebrationCard">
         <div class="celebration-emoji" id="vocab-emoji">🍎</div>
         <div class="celebration-word" id="vocab-word">Apple</div>
-        <div class="celebration-sub" id="vocab-phonics">"A" is for Apple</div>
+        <div class="celebration-sub" id="vocab-phonics">A for Apple</div>
+        <div class="auto-next-pill">Moving to next... ✨</div>
       </div>
     </div>
 
@@ -266,7 +253,7 @@
       <div class="progress-fill" id="progressBar"></div>
     </div>
 
-    <!-- Action Buttons -->
+    <!-- Controls -->
     <div class="action-row">
       <button class="action-btn btn-clear" onclick="clearCanvas()">🔄 Clear</button>
       <button class="action-btn btn-sound" onclick="playCurrentAudio()">🔊 Hear Sound</button>
@@ -274,7 +261,6 @@
   </div>
 
   <script>
-    // --- Letter Datasets ---
     const datasets = {
       en: [
         { letter: 'A', word: 'Apple', phonic: 'A for Apple', emoji: '🍎', langCode: 'en-US' },
@@ -300,13 +286,13 @@
     let currentIndex = 0;
     let isDrawing = false;
     let isCompleted = false;
+    let autoNextTimer = null;
 
     const canvas = document.getElementById('traceCanvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    let targetPixelCount = 0;
-    let matchedPixels = new Set();
+    let targetPixelPoints = [];
+    let hitCount = 0;
 
-    // Resize canvas based on client display
     function initCanvasSize() {
       const rect = canvas.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
@@ -320,8 +306,9 @@
       return datasets[currentLang][currentIndex];
     }
 
-    // Render dotted guide letter and map target points for collision
     function renderLetter() {
+      if (autoNextTimer) clearTimeout(autoNextTimer);
+      
       const item = getCurrentItem();
       const rect = canvas.getBoundingClientRect();
       const width = rect.width;
@@ -329,35 +316,34 @@
 
       ctx.clearRect(0, 0, width, height);
 
-      // Setup font
-      const fontSize = Math.min(width, height) * 0.65;
+      // Letter text size
+      const fontSize = Math.min(width, height) * 0.62;
       ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // Draw dotted guide letter
-      ctx.setLineDash([8, 12]);
-      ctx.lineWidth = 6;
+      // Draw light gray dashed guide letter
+      ctx.setLineDash([10, 14]);
+      ctx.lineWidth = 8;
       ctx.strokeStyle = '#b2bec3';
-      ctx.strokeText(item.letter, width / 2, height / 2 + 10);
+      ctx.strokeText(item.letter, width / 2, height / 2 + 8);
 
-      // Light background fill for visual aid
-      ctx.fillStyle = 'rgba(238, 238, 238, 0.5)';
-      ctx.fillText(item.letter, width / 2, height / 2 + 10);
+      // Soft fill under the guide
+      ctx.fillStyle = 'rgba(238, 238, 238, 0.4)';
+      ctx.fillText(item.letter, width / 2, height / 2 + 8);
 
-      // Pre-calculate target mask points
-      mapTargetPixels(item.letter, width, height, fontSize);
+      // Precalculate sparse target hitpoints
+      mapSparseLetterPoints(item.letter, width, height, fontSize);
 
-      // Update UI displays
       document.getElementById('letter-title').textContent = `${item.letter} - ${item.word}`;
       document.getElementById('progressBar').style.width = '0%';
       document.getElementById('celebrationCard').classList.remove('show');
       isCompleted = false;
-      matchedPixels.clear();
+      hitCount = 0;
     }
 
-    // Sample the pixels forming the letter to compute tracing coverage
-    function mapTargetPixels(letter, width, height, fontSize) {
+    // Creates an array of point coordinates covering the letter
+    function mapSparseLetterPoints(letter, width, height, fontSize) {
       const offCanvas = document.createElement('canvas');
       offCanvas.width = width;
       offCanvas.height = height;
@@ -366,46 +352,45 @@
       offCtx.font = `bold ${fontSize}px sans-serif`;
       offCtx.textAlign = 'center';
       offCtx.textBaseline = 'middle';
-      offCtx.fillText(letter, width / 2, height / 2 + 10);
+      offCtx.fillText(letter, width / 2, height / 2 + 8);
 
       const imgData = offCtx.getImageData(0, 0, width, height).data;
-      targetPixelCount = 0;
+      targetPixelPoints = [];
 
-      // Sample every 8th pixel to optimize performance
-      for (let y = 0; y < height; y += 8) {
-        for (let x = 0; x < width; x += 8) {
+      // Step by 16px to create forgiving checkpoints
+      for (let y = 0; y < height; y += 16) {
+        for (let x = 0; x < width; x += 16) {
           const index = (y * width + x) * 4;
-          if (imgData[index + 3] > 128) {
-            targetPixelCount++;
+          if (imgData[index + 3] > 120) {
+            targetPixelPoints.push({ x, y, hit: false });
           }
         }
       }
     }
 
-    // Speech Synthesis
-    function speak(text, langCode) {
+    // Audio Player with Web Speech API
+    function playAudio(text, langCode) {
       if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel(); // Stop active audio
+      window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = langCode;
-      utterance.rate = 0.85; // Slightly slower for kids
+      utterance.rate = 0.85;
       utterance.pitch = 1.1;
 
-      // Check for matching system voice
       const voices = window.speechSynthesis.getVoices();
-      const matchedVoice = voices.find(v => v.lang.startsWith(langCode.slice(0, 2)));
-      if (matchedVoice) utterance.voice = matchedVoice;
+      const matched = voices.find(v => v.lang.startsWith(langCode.slice(0, 2)));
+      if (matched) utterance.voice = matched;
 
       window.speechSynthesis.speak(utterance);
     }
 
     function playCurrentAudio() {
       const item = getCurrentItem();
-      speak(item.phonic, item.langCode);
+      playAudio(item.phonic, item.langCode);
     }
 
-    // --- Tracing & Touch Handlers ---
+    // Pointer & Touch Controls
     function getPointerPos(e) {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -436,9 +421,8 @@
     }
 
     function drawStroke(x, y, isMoving) {
-      // Draw smooth brush line
       ctx.setLineDash([]);
-      ctx.lineWidth = 26; // Generous width for small fingers
+      ctx.lineWidth = 36; // Thick stroke for toddlers
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.strokeStyle = '#ff7675';
@@ -450,24 +434,32 @@
       ctx.lineTo(x, y);
       ctx.stroke();
 
-      // Check hit-area coverage
-      const gridX = Math.floor(x / 8) * 8;
-      const gridY = Math.floor(y / 8) * 8;
-      const key = `${gridX},${gridY}`;
-
-      if (!matchedPixels.has(key)) {
-        matchedPixels.add(key);
-        updateProgress();
+      // Check hits within touch radius (34px)
+      const touchRadiusSq = 34 * 34;
+      for (let i = 0; i < targetPixelPoints.length; i++) {
+        const pt = targetPixelPoints[i];
+        if (!pt.hit) {
+          const dx = pt.x - x;
+          const dy = pt.y - y;
+          if (dx * dx + dy * dy <= touchRadiusSq) {
+            pt.hit = true;
+            hitCount++;
+          }
+        }
       }
+
+      updateProgress();
     }
 
     function updateProgress() {
-      if (targetPixelCount === 0) return;
-      const progress = Math.min(100, Math.round((matchedPixels.size / (targetPixelCount * 0.75)) * 100));
-      document.getElementById('progressBar').style.width = `${progress}%`;
+      if (targetPixelPoints.length === 0) return;
+      
+      // Target 55% coverage for toddlers to complete easily
+      const completionFraction = hitCount / (targetPixelPoints.length * 0.55);
+      const progressPercent = Math.min(100, Math.round(completionFraction * 100));
+      document.getElementById('progressBar').style.width = `${progressPercent}%`;
 
-      // Trigger completion at 75% coverage
-      if (progress >= 75 && !isCompleted) {
+      if (progressPercent >= 100 && !isCompleted) {
         triggerSuccess();
       }
     }
@@ -476,22 +468,27 @@
       isCompleted = true;
       const item = getCurrentItem();
 
-      // Show word card
+      // Display Pop-up Word & Emoji
       document.getElementById('vocab-emoji').textContent = item.emoji;
       document.getElementById('vocab-word').textContent = item.word;
       document.getElementById('vocab-phonics').textContent = item.phonic;
       document.getElementById('celebrationCard').classList.add('show');
 
-      // Play phonetic voice
+      // Play Phonetic Sound
       playCurrentAudio();
+
+      // Auto-advance to next letter after 2.5 seconds
+      autoNextTimer = setTimeout(() => {
+        nextLetter();
+      }, 2500);
     }
 
-    // --- Controls & Switching ---
-    function switchLanguage(lang) {
+    // Navigation Controls
+    function switchLanguage(lang, e) {
       currentLang = lang;
       currentIndex = 0;
-      document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
       renderLetter();
     }
 
@@ -509,7 +506,7 @@
       renderLetter();
     }
 
-    // Event Listeners for Touch and Mouse
+    // Event listeners
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
     window.addEventListener('mouseup', stopDrawing);
@@ -520,7 +517,6 @@
 
     window.addEventListener('resize', initCanvasSize);
     window.addEventListener('DOMContentLoaded', () => {
-      // Chrome requires user interaction or voiceschanged event to populate voices
       if ('speechSynthesis' in window) {
         window.speechSynthesis.onvoiceschanged = () => {};
       }
