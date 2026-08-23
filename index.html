@@ -98,7 +98,7 @@
       color: #2d3436;
     }
 
-    /* Canvas Wrapper */
+    /* Worksheet Canvas Card */
     .canvas-wrapper {
       position: relative;
       width: 100%;
@@ -119,53 +119,9 @@
       touch-action: none;
     }
 
-    #particleCanvas {
-      pointer-events: none;
-      z-index: 2;
-    }
+    #drawCanvas { z-index: 2; }
+    #particleCanvas { z-index: 3; pointer-events: none; }
 
-    /* Animated Guide Hand Element */
-    .guide-hand {
-      position: absolute;
-      font-size: 2.8rem;
-      pointer-events: none;
-      z-index: 5;
-      transform: translate(-50%, -50%);
-      transition: opacity 0.3s ease;
-      display: none;
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
-    }
-
-    .guide-hand.active {
-      display: block;
-      opacity: 1;
-      animation: guideMove 2.2s infinite ease-in-out;
-    }
-
-    .guide-hand.hidden {
-      opacity: 0;
-    }
-
-    @keyframes guideMove {
-      0% {
-        transform: translate(-50%, -50%) scale(0.9);
-        opacity: 0;
-      }
-      20% {
-        transform: translate(-50%, -50%) scale(1.1);
-        opacity: 1;
-      }
-      70% {
-        transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 50px))) scale(1);
-        opacity: 0.9;
-      }
-      90%, 100% {
-        transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 50px))) scale(0.8);
-        opacity: 0;
-      }
-    }
-
-    /* Crayon Color Palette */
     .crayon-palette {
       display: flex;
       justify-content: center;
@@ -229,7 +185,6 @@
     .btn-clear { background: #fab1a0; color: #d63031; }
     .btn-sound { background: #ffeaa7; color: #d35400; }
 
-    /* Celebration Card */
     .celebration-overlay {
       position: absolute;
       inset: 0;
@@ -242,7 +197,7 @@
       pointer-events: none;
       transform: scale(0.85);
       transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      z-index: 10;
+      z-index: 20;
       padding: 20px 14px;
       text-align: center;
     }
@@ -314,11 +269,12 @@
     </div>
 
     <div class="canvas-wrapper">
-      <canvas id="traceCanvas"></canvas>
+      <!-- Background guide layer: Hollow track, dashed center, and numbered arrow badges -->
+      <canvas id="guideCanvas"></canvas>
+      <!-- Active drawing layer -->
+      <canvas id="drawCanvas"></canvas>
+      <!-- Sparkle layer -->
       <canvas id="particleCanvas"></canvas>
-      
-      <!-- Animated Guide Hand Indicator -->
-      <div class="guide-hand" id="guideHand">👆</div>
 
       <div class="celebration-overlay" id="celebrationCard">
         <div class="celebration-letter" id="vocab-letter">A</div>
@@ -483,27 +439,26 @@
     let autoNextTimer = null;
     let activeCrayon = '#ff7675';
 
-    const canvas = document.getElementById('traceCanvas');
-    const ctx = canvas.getContext('2d');
+    const gCanvas = document.getElementById('guideCanvas');
+    const gCtx = gCanvas.getContext('2d');
+    const dCanvas = document.getElementById('drawCanvas');
+    const dCtx = dCanvas.getContext('2d');
     const pCanvas = document.getElementById('particleCanvas');
     const pCtx = pCanvas.getContext('2d');
-    const guideHand = document.getElementById('guideHand');
 
     let allTargetPoints = [];
     let strokeClusters = [];
     let particles = [];
 
     function initCanvasSize() {
-      const rect = canvas.getBoundingClientRect();
+      const rect = dCanvas.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      pCanvas.width = rect.width * dpr;
-      pCanvas.height = rect.height * dpr;
-      pCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      [gCanvas, dCanvas, pCanvas].forEach(c => {
+        c.width = rect.width * dpr;
+        c.height = rect.height * dpr;
+        c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+      });
 
       renderLetter();
     }
@@ -518,47 +473,61 @@
       el.classList.add('selected');
     }
 
+    // --- Renders Hollow Boundary Track + Dashed Center + Numbered Badges ---
     function renderLetter() {
       if (autoNextTimer) clearTimeout(autoNextTimer);
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
       const item = getCurrentItem();
-      const rect = canvas.getBoundingClientRect();
+      const rect = dCanvas.getBoundingClientRect();
       const width = rect.width;
       const height = rect.height;
 
-      ctx.clearRect(0, 0, width, height);
+      // Clear layers
+      gCtx.clearRect(0, 0, width, height);
+      dCtx.clearRect(0, 0, width, height);
       pCtx.clearRect(0, 0, width, height);
       particles = [];
 
       const fontSize = Math.min(width, height) * 0.78;
-      ctx.font = `bold ${fontSize}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      const fontStr = `bold ${fontSize}px sans-serif`;
+      const centerX = width / 2;
+      const centerY = height / 2 + 4;
 
-      // Dashed guide outline
-      ctx.setLineDash([12, 16]);
-      ctx.lineWidth = 9;
-      ctx.strokeStyle = '#b2bec3';
-      ctx.strokeText(item.letter, width / 2, height / 2 + 4);
+      gCtx.textAlign = 'center';
+      gCtx.textBaseline = 'middle';
+      gCtx.font = fontStr;
 
-      // Light background fill
-      ctx.fillStyle = 'rgba(238, 238, 238, 0.4)';
-      ctx.fillText(item.letter, width / 2, height / 2 + 4);
+      // 1. Solid Outer Lane Boundary (Hollow Track)
+      gCtx.setLineDash([]);
+      gCtx.lineWidth = 42;
+      gCtx.lineJoin = 'round';
+      gCtx.lineCap = 'round';
+      gCtx.strokeStyle = '#2d3436';
+      gCtx.strokeText(item.letter, centerX, centerY);
 
-      mapLetterPoints(item.letter, width, height, fontSize);
+      // 2. White Inner Cutout (Forms the Hollow Writing Channel)
+      gCtx.lineWidth = 36;
+      gCtx.strokeStyle = '#ffffff';
+      gCtx.strokeText(item.letter, centerX, centerY);
+
+      // 3. Center Dashed Guide Line
+      gCtx.setLineDash([8, 10]);
+      gCtx.lineWidth = 4;
+      gCtx.strokeStyle = '#74b9ff';
+      gCtx.strokeText(item.letter, centerX, centerY);
+
+      // Map letter points for collision and numbered arrow badges
+      mapLetterPointsAndBadges(item.letter, width, height, fontSize, centerX, centerY);
 
       document.getElementById('letter-title').textContent = `${item.letter} - ${item.word}`;
       document.getElementById('progressBar').style.width = '0%';
       document.getElementById('celebrationCard').classList.remove('show');
       isCompleted = false;
-
-      // Position and start guide hand
-      positionGuideHand();
     }
 
-    // 3x3 Spatial Grid Mapping & Starting Point Calculation
-    function mapLetterPoints(letter, width, height, fontSize) {
+    // Maps points and draws Numbered Starting Badges (❶, ❷, ❸) with direction arrows
+    function mapLetterPointsAndBadges(letter, width, height, fontSize, cx, cy) {
       const offCanvas = document.createElement('canvas');
       offCanvas.width = width;
       offCanvas.height = height;
@@ -567,7 +536,7 @@
       offCtx.font = `bold ${fontSize}px sans-serif`;
       offCtx.textAlign = 'center';
       offCtx.textBaseline = 'middle';
-      offCtx.fillText(letter, width / 2, height / 2 + 4);
+      offCtx.fillText(letter, cx, cy);
 
       const imgData = offCtx.getImageData(0, 0, width, height).data;
       allTargetPoints = [];
@@ -589,6 +558,7 @@
 
       if (allTargetPoints.length === 0) return;
 
+      // 3x3 Spatial partitioning for completion checking
       strokeClusters = [];
       const stepX = (maxX - minX) / 3;
       const stepY = (maxY - minY) / 3;
@@ -601,38 +571,74 @@
           const y1 = (r === 2) ? maxY + 1 : y0 + stepY;
 
           const ptsInCell = allTargetPoints.filter(p => p.x >= x0 && p.x < x1 && p.y >= y0 && p.y < y1);
-
           if (ptsInCell.length >= 5) {
             strokeClusters.push(ptsInCell);
           }
         }
       }
+
+      // Draw Numbered Badges & Directional Arrows
+      drawStrokeBadges(letter, minX, maxX, minY, maxY);
     }
 
-    // Calculate natural start point and position animated guide hand
-    function positionGuideHand() {
-      if (allTargetPoints.length === 0) return;
+    // Draws early learning handwriting badges like in the Pinterest guide
+    function drawStrokeBadges(letter, minX, maxX, minY, maxY) {
+      gCtx.setLineDash([]);
+      const midX = (minX + maxX) / 2;
+      const midY = (minY + maxY) / 2;
 
-      // Find highest points on the letter
-      let topPoints = [...allTargetPoints].sort((a, b) => a.y - b.y).slice(0, 8);
-      // Pick the left-most among top points (natural writing start)
-      topPoints.sort((a, b) => a.x - b.x);
-      const startPt = topPoints[0];
+      // Badge helper: Draws numbered circle with arrow
+      function renderBadge(num, x, y, arrowText, adx, ady) {
+        // Circle
+        gCtx.beginPath();
+        gCtx.arc(x, y, 11, 0, Math.PI * 2);
+        gCtx.fillStyle = '#0984e3';
+        gCtx.fill();
+        gCtx.lineWidth = 2;
+        gCtx.strokeStyle = '#ffffff';
+        gCtx.stroke();
 
-      guideHand.style.left = `${startPt.x}px`;
-      guideHand.style.top = `${startPt.y}px`;
-      guideHand.style.setProperty('--dx', '0px');
-      guideHand.style.setProperty('--dy', '45px');
+        // Number Text
+        gCtx.font = 'bold 12px sans-serif';
+        gCtx.fillStyle = '#ffffff';
+        gCtx.textAlign = 'center';
+        gCtx.textBaseline = 'middle';
+        gCtx.fillText(num, x, y + 0.5);
 
-      guideHand.classList.remove('hidden');
-      guideHand.classList.add('active');
+        // Arrow Pointer
+        if (arrowText) {
+          gCtx.font = 'bold 14px sans-serif';
+          gCtx.fillStyle = '#d63031';
+          gCtx.fillText(arrowText, x + adx, y + ady);
+        }
+      }
+
+      // Letter-specific badge locations
+      if (letter === 'A') {
+        renderBadge('1', midX - 6, minY + 12, '↙', -16, 16);
+        renderBadge('2', midX + 6, minY + 12, '↘', 16, 16);
+        renderBadge('3', minX + (maxX - minX) * 0.28, midY + 12, '➔', 22, 0);
+      } else if (letter === 'B') {
+        renderBadge('1', minX + 8, minY + 10, '↓', 0, 20);
+        renderBadge('2', minX + 26, minY + 8, '↷', 18, 12);
+        renderBadge('3', minX + 26, midY + 4, '↷', 18, 12);
+      } else if (letter === 'C') {
+        renderBadge('1', maxX - 12, minY + 18, '↶', -18, 10);
+      } else if (letter === 'D') {
+        renderBadge('1', minX + 8, minY + 10, '↓', 0, 20);
+        renderBadge('2', minX + 26, minY + 8, '↷', 20, 16);
+      } else if (currentLang !== 'en') {
+        // Devanagari Letters: 1 on Left, 2 on Middle, 3 on Top Shirorekha Bar
+        renderBadge('1', minX + 14, minY + 26, '↷', 16, 14);
+        renderBadge('2', midX + 8, minY + 16, '↓', 0, 20);
+        renderBadge('3', minX + 8, minY + 6, '➔', 20, 0);
+      } else {
+        // Default Single Stroke Badge
+        renderBadge('1', minX + 10, minY + 12, '↓', 0, 18);
+      }
     }
 
-    function hideGuideHand() {
-      guideHand.classList.add('hidden');
-    }
-
-    // Star Sparkle Particles
+    // --- Particle Effects ---
     function spawnSparkles(x, y) {
       for (let i = 0; i < 3; i++) {
         particles.push({
@@ -674,11 +680,11 @@
     }
     requestAnimationFrame(animateParticles);
 
-    // Celebration Chime Audio using Web Audio API
+    // --- Web Audio Chime ---
     function playCelebrationChime() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        const notes = [523.25, 659.25, 783.99, 1046.50];
         notes.forEach((freq, i) => {
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
@@ -694,7 +700,7 @@
       } catch (e) {}
     }
 
-    // Speech Synthesis
+    // --- Speech Synthesis ---
     function speakText(text, langCode, rate = 0.75, onEndCallback = null) {
       if (!('speechSynthesis' in window)) return;
 
@@ -725,9 +731,9 @@
       });
     }
 
-    // Drawing Controls
+    // --- Drawing Controls ---
     function getPointerPos(e) {
-      const rect = canvas.getBoundingClientRect();
+      const rect = dCanvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       return {
@@ -739,7 +745,6 @@
     function startDrawing(e) {
       if (isCompleted) return;
       isDrawing = true;
-      hideGuideHand();
       const pos = getPointerPos(e);
       drawStroke(pos.x, pos.y, false);
       spawnSparkles(pos.x, pos.y);
@@ -756,23 +761,23 @@
     function stopDrawing() {
       if (!isDrawing) return;
       isDrawing = false;
-      ctx.beginPath();
+      dCtx.beginPath();
       checkCompletionOnRelease();
     }
 
     function drawStroke(x, y, isMoving) {
-      ctx.setLineDash([]);
-      ctx.lineWidth = 34;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.strokeStyle = activeCrayon;
+      dCtx.setLineDash([]);
+      dCtx.lineWidth = 32;
+      dCtx.lineCap = 'round';
+      dCtx.lineJoin = 'round';
+      dCtx.strokeStyle = activeCrayon;
 
       if (!isMoving) {
-        ctx.beginPath();
-        ctx.moveTo(x, y);
+        dCtx.beginPath();
+        dCtx.moveTo(x, y);
       }
-      ctx.lineTo(x, y);
-      ctx.stroke();
+      dCtx.lineTo(x, y);
+      dCtx.stroke();
 
       const touchRadiusSq = 24 * 24;
       allTargetPoints.forEach(pt => {
@@ -821,20 +826,20 @@
 
     function revealDigitalLetter() {
       const item = getCurrentItem();
-      const rect = canvas.getBoundingClientRect();
+      const rect = dCanvas.getBoundingClientRect();
       const width = rect.width;
       const height = rect.height;
       const fontSize = Math.min(width, height) * 0.78;
 
-      ctx.clearRect(0, 0, width, height);
-      ctx.font = `bold ${fontSize}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = activeCrayon;
-      ctx.shadowColor = activeCrayon;
-      ctx.shadowBlur = 14;
-      ctx.fillText(item.letter, width / 2, height / 2 + 4);
-      ctx.shadowBlur = 0;
+      dCtx.clearRect(0, 0, width, height);
+      dCtx.font = `bold ${fontSize}px sans-serif`;
+      dCtx.textAlign = 'center';
+      dCtx.textBaseline = 'middle';
+      dCtx.fillStyle = activeCrayon;
+      dCtx.shadowColor = activeCrayon;
+      dCtx.shadowBlur = 14;
+      dCtx.fillText(item.letter, width / 2, height / 2 + 4);
+      dCtx.shadowBlur = 0;
     }
 
     function triggerCelebration() {
@@ -876,12 +881,12 @@
       renderLetter();
     }
 
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
+    dCanvas.addEventListener('mousedown', startDrawing);
+    dCanvas.addEventListener('mousemove', draw);
     window.addEventListener('mouseup', stopDrawing);
 
-    canvas.addEventListener('touchstart', startDrawing, { passive: false });
-    canvas.addEventListener('touchmove', draw, { passive: false });
+    dCanvas.addEventListener('touchstart', startDrawing, { passive: false });
+    dCanvas.addEventListener('touchmove', draw, { passive: false });
     window.addEventListener('touchend', stopDrawing);
 
     window.addEventListener('resize', initCanvasSize);
