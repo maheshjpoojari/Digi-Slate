@@ -20,7 +20,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 16px;
+      padding: 12px 16px;
       color: #2f3e46;
       touch-action: none;
     }
@@ -31,11 +31,11 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     header h1 {
-      font-size: 1.8rem;
+      font-size: 1.7rem;
       color: #333;
     }
 
@@ -70,7 +70,7 @@
       justify-content: space-between;
       width: 100%;
       background: #ffffff;
-      padding: 8px 16px;
+      padding: 6px 14px;
       border-radius: 20px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.06);
     }
@@ -79,9 +79,9 @@
       background: #74b9ff;
       border: none;
       color: white;
-      font-size: 1.4rem;
-      width: 44px;
-      height: 44px;
+      font-size: 1.3rem;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       cursor: pointer;
       box-shadow: 0 4px #0984e3;
@@ -93,15 +93,16 @@
     }
 
     .current-letter-display {
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       font-weight: bold;
       color: #2d3436;
     }
 
+    /* Expanded Canvas Area utilizing bottom space */
     .canvas-wrapper {
       position: relative;
       width: 100%;
-      aspect-ratio: 1 / 1;
+      aspect-ratio: 4 / 4.6;
       background: #ffffff;
       border-radius: 28px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
@@ -120,7 +121,7 @@
 
     .progress-bar-container {
       width: 100%;
-      height: 14px;
+      height: 12px;
       background: #dfe6e9;
       border-radius: 10px;
       overflow: hidden;
@@ -183,37 +184,37 @@
     }
 
     .celebration-letter {
-      font-size: 4.8rem;
+      font-size: 5rem;
       font-weight: 900;
       color: #ff7675;
-      line-height: 1.1;
+      line-height: 1;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.08);
     }
 
     .celebration-emoji {
-      font-size: 5.5rem;
+      font-size: 6rem;
       line-height: 1;
       animation: pulseBounce 0.9s infinite alternate ease-in-out;
     }
 
     .celebration-word {
-      font-size: 2.6rem;
+      font-size: 2.8rem;
       font-weight: 800;
       color: #2d3436;
       line-height: 1.2;
     }
 
     .celebration-sub {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       color: #0984e3;
       font-weight: bold;
     }
 
     .celebration-timer-text {
-      font-size: 1rem;
+      font-size: 1.05rem;
       color: #2d3436;
       background: #ffeaa7;
-      padding: 6px 18px;
+      padding: 6px 20px;
       border-radius: 20px;
       font-weight: bold;
     }
@@ -246,7 +247,7 @@
     <div class="canvas-wrapper">
       <canvas id="traceCanvas"></canvas>
       
-      <!-- Full-card Celebration Pop-up -->
+      <!-- Word Card Pop-up with Larger Typography -->
       <div class="celebration-overlay" id="celebrationCard">
         <div class="celebration-letter" id="vocab-letter">A</div>
         <div class="celebration-emoji" id="vocab-emoji">🍎</div>
@@ -324,22 +325,22 @@
 
       ctx.clearRect(0, 0, width, height);
 
-      const fontSize = Math.min(width, height) * 0.65;
+      // Expanded font sizing to give maximum room for finger tracing
+      const fontSize = Math.min(width, height) * 0.78;
       ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
       // Dashed guide outline
-      ctx.setLineDash([10, 14]);
-      ctx.lineWidth = 8;
+      ctx.setLineDash([12, 16]);
+      ctx.lineWidth = 9;
       ctx.strokeStyle = '#b2bec3';
-      ctx.strokeText(item.letter, width / 2, height / 2 + 6);
+      ctx.strokeText(item.letter, width / 2, height / 2 + 4);
 
       // Light background fill
       ctx.fillStyle = 'rgba(238, 238, 238, 0.4)';
-      ctx.fillText(item.letter, width / 2, height / 2 + 6);
+      ctx.fillText(item.letter, width / 2, height / 2 + 4);
 
-      // Map letter points into dense checkpoints
       mapLetterPoints(item.letter, width, height, fontSize);
 
       document.getElementById('letter-title').textContent = `${item.letter} - ${item.word}`;
@@ -348,7 +349,6 @@
       isCompleted = false;
     }
 
-    // Maps points and creates grid clusters across the letter's active area
     function mapLetterPoints(letter, width, height, fontSize) {
       const offCanvas = document.createElement('canvas');
       offCanvas.width = width;
@@ -358,7 +358,7 @@
       offCtx.font = `bold ${fontSize}px sans-serif`;
       offCtx.textAlign = 'center';
       offCtx.textBaseline = 'middle';
-      offCtx.fillText(letter, width / 2, height / 2 + 6);
+      offCtx.fillText(letter, width / 2, height / 2 + 4);
 
       const imgData = offCtx.getImageData(0, 0, width, height).data;
       allTargetPoints = [];
@@ -380,7 +380,6 @@
 
       if (allTargetPoints.length === 0) return;
 
-      // Group checkpoints into 6 distinct spatial zones (Left-Top, Right-Top, Left-Mid, Right-Mid, Left-Bot, Right-Bot)
       strokeClusters = [];
       const midX = (minX + maxX) / 2;
       const stepY = (maxY - minY) / 3;
@@ -393,7 +392,6 @@
         zoneBins[binIndex].push(pt);
       });
 
-      // Keep only active bins containing actual strokes
       zoneBins.forEach(bin => {
         if (bin.length >= 6) {
           strokeClusters.push(bin);
@@ -464,7 +462,7 @@
 
     function drawStroke(x, y, isMoving) {
       ctx.setLineDash([]);
-      ctx.lineWidth = 32;
+      ctx.lineWidth = 34;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.strokeStyle = '#ff7675';
@@ -476,7 +474,7 @@
       ctx.lineTo(x, y);
       ctx.stroke();
 
-      const touchRadiusSq = 24 * 24;
+      const touchRadiusSq = 26 * 26;
       allTargetPoints.forEach(pt => {
         if (!pt.hit) {
           const dx = pt.x - x;
@@ -500,7 +498,6 @@
       const totalHits = allTargetPoints.filter(p => p.hit).length;
       const overallRatio = totalHits / allTargetPoints.length;
 
-      // 100% Structural Check: EVERY active letter segment must have at least 55% coverage
       let allSegmentsDone = true;
       strokeClusters.forEach(cluster => {
         const clusterHits = cluster.filter(p => p.hit).length;
@@ -509,14 +506,37 @@
         }
       });
 
-      // Strict Completion Rule: Overall coverage >= 82% AND all segments covered
       if (overallRatio >= 0.82 && allSegmentsDone) {
         isCompleted = true;
         document.getElementById('progressBar').style.width = '100%';
+        
+        // Step 1: Reveal clean digital letter on canvas first
+        revealDigitalLetter();
+
+        // Step 2: Show celebration card and play phonetic sound after 1.2s
         setTimeout(() => {
           triggerCelebration();
-        }, 350);
+        }, 1200);
       }
+    }
+
+    function revealDigitalLetter() {
+      const item = getCurrentItem();
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+      const fontSize = Math.min(width, height) * 0.78;
+
+      // Clean canvas and display sharp digital letter
+      ctx.clearRect(0, 0, width, height);
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ff7675';
+      ctx.shadowColor = 'rgba(255, 118, 117, 0.4)';
+      ctx.shadowBlur = 12;
+      ctx.fillText(item.letter, width / 2, height / 2 + 4);
+      ctx.shadowBlur = 0;
     }
 
     function triggerCelebration() {
