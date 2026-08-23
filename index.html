@@ -130,7 +130,7 @@
       height: 100%;
       width: 0%;
       background: #00b894;
-      transition: width 0.15s ease-out;
+      transition: width 0.2s ease-out;
     }
 
     .action-row {
@@ -293,9 +293,9 @@
     const canvas = document.getElementById('traceCanvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     
-    // Segment Clusters
-    let letterClusters = [];
-    let allPoints = [];
+    // Spatial 3x3 Grid Map
+    let gridCells = [];
+    let allTargetPoints = [];
 
     function initCanvasSize() {
       const rect = canvas.getBoundingClientRect();
@@ -326,18 +326,18 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // Dashed guide letter
+      // Dashed guide outline
       ctx.setLineDash([10, 14]);
       ctx.lineWidth = 8;
       ctx.strokeStyle = '#b2bec3';
       ctx.strokeText(item.letter, width / 2, height / 2 + 8);
 
-      // Light backdrop guide
+      // Light background fill
       ctx.fillStyle = 'rgba(238, 238, 238, 0.4)';
       ctx.fillText(item.letter, width / 2, height / 2 + 8);
 
-      // Extract shape clusters
-      extractLetterClusters(item.letter, width, height, fontSize);
+      // Map letter points into 3x3 spatial bounding grid
+      mapLetterToSpatialGrid(item.letter, width, height, fontSize);
 
       document.getElementById('letter-title').textContent = `${item.letter} - ${item.word}`;
       document.getElementById('progressBar').style.width = '0%';
@@ -345,8 +345,8 @@
       isCompleted = false;
     }
 
-    // Splits the letter into 5 geometric clusters
-    function extractLetterClusters(letter, width, height, fontSize) {
+    // 3x3 Spatial Grid Partitioning
+    function mapLetterToSpatialGrid(letter, width, height, fontSize) {
       const offCanvas = document.createElement('canvas');
       offCanvas.width = width;
       offCanvas.height = height;
@@ -358,35 +358,50 @@
       offCtx.fillText(letter, width / 2, height / 2 + 8);
 
       const imgData = offCtx.getImageData(0, 0, width, height).data;
-      allPoints = [];
+      allTargetPoints = [];
 
-      for (let y = 0; y < height; y += 12) {
-        for (let x = 0; x < width; x += 12) {
+      let minX = width, maxX = 0, minY = height, maxY = 0;
+
+      // Extract bounding box and sample points
+      for (let y = 0; y < height; y += 10) {
+        for (let x = 0; x < width; x += 10) {
           const index = (y * width + x) * 4;
           if (imgData[index + 3] > 120) {
-            allPoints.push({ x, y, hit: false, cluster: 0 });
+            allTargetPoints.push({ x, y, hit: false });
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
           }
         }
       }
 
-      if (allPoints.length === 0) return;
+      if (allTargetPoints.length === 0) return;
 
-      // Group points into 5 spatial clusters along Y and X
-      const K = 5;
-      letterClusters = Array.from({ length: K }, () => []);
-      
-      // Sort vertically and group into bands to capture top, middle, and bottom strokes
-      allPoints.sort((a, b) => a.y - b.y || a.x - b.x);
-      const chunkSize = Math.ceil(allPoints.length / K);
+      // Create 3x3 spatial cells strictly covering the letter bounding box
+      gridCells = [];
+      const stepX = (maxX - minX) / 3;
+      const stepY = (maxY - minY) / 3;
 
-      allPoints.forEach((pt, idx) => {
-        const clusterId = Math.min(K - 1, Math.floor(idx / chunkSize));
-        pt.cluster = clusterId;
-        letterClusters[clusterId].push(pt);
-      });
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          const x0 = minX + c * stepX;
+          const x1 = x0 + stepX;
+          const y0 = minY + r * stepY;
+          const y1 = y0 + stepY;
+
+          // Points falling inside this specific cell
+          const points = allTargetPoints.filter(p => p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1);
+          
+          // Only track cells that actually contain character strokes (min 5 points)
+          if (points.length >= 5) {
+            gridCells.push({ points: points });
+          }
+        }
+      }
     }
 
-    // Paced Speech Synthesis
+    // Paced Audio Speech
     function speakText(text, langCode, rate = 0.75, onEndCallback = null) {
       if (!('speechSynthesis' in window)) return;
 
@@ -417,7 +432,7 @@
       });
     }
 
-    // Touch & Pointer Handlers
+    // Touch and Drawing Handlers
     function getPointerPos(e) {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -464,7 +479,7 @@
       ctx.stroke();
 
       const touchRadiusSq = 26 * 26;
-      allPoints.forEach(pt => {
+      allTargetPoints.forEach(pt => {
         if (!pt.hit) {
           const dx = pt.x - x;
           const dy = pt.y - y;
@@ -474,33 +489,33 @@
         }
       });
 
-      // Update progress bar based on total hit points
-      if (allPoints.length > 0) {
-        const totalHits = allPoints.filter(p => p.hit).length;
-        const pct = Math.min(95, Math.round((totalHits / allPoints.length) * 100));
+      // Update progress strictly reflecting genuine completion
+      if (allTargetPoints.length > 0) {
+        const totalHits = allTargetPoints.filter(p => p.hit).length;
+        const pct = Math.min(95, Math.round((totalHits / allTargetPoints.length) * 100));
         document.getElementById('progressBar').style.width = `${pct}%`;
       }
     }
 
     function checkCompletionOnRelease() {
-      if (isCompleted || allPoints.length === 0) return;
+      if (isCompleted || allTargetPoints.length === 0 || gridCells.length === 0) return;
 
-      const totalHits = allPoints.filter(p => p.hit).length;
-      const overallRatio = totalHits / allPoints.length;
+      const totalHits = allTargetPoints.filter(p => p.hit).length;
+      const overallRatio = totalHits / allTargetPoints.length;
 
-      // Count how many distinct parts/clusters of the letter have been drawn
-      let completedClusters = 0;
-      letterClusters.forEach(cluster => {
-        if (cluster.length > 0) {
-          const clusterHits = cluster.filter(p => p.hit).length;
-          if (clusterHits / cluster.length >= 0.50) {
-            completedClusters++;
-          }
+      // Count how many individual grid cells have been traced (at least 40% hit per active cell)
+      let coveredCells = 0;
+      gridCells.forEach(cell => {
+        const cellHits = cell.points.filter(p => p.hit).length;
+        if (cellHits / cell.points.length >= 0.40) {
+          coveredCells++;
         }
       });
 
-      // Must have covered 65% total AND touched at least 4 out of 5 letter regions
-      if (overallRatio >= 0.65 && completedClusters >= 4) {
+      // Verification Rule: Must complete at least 80% of all spatial cells AND 68% of total pixels
+      const requiredCells = Math.ceil(gridCells.length * 0.80);
+
+      if (overallRatio >= 0.68 && coveredCells >= requiredCells) {
         isCompleted = true;
         document.getElementById('progressBar').style.width = '100%';
         setTimeout(() => {
