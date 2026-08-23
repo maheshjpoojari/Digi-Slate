@@ -98,6 +98,7 @@
       color: #2d3436;
     }
 
+    /* Canvas Wrapper */
     .canvas-wrapper {
       position: relative;
       width: 100%;
@@ -123,6 +124,48 @@
       z-index: 2;
     }
 
+    /* Animated Guide Hand Element */
+    .guide-hand {
+      position: absolute;
+      font-size: 2.8rem;
+      pointer-events: none;
+      z-index: 5;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.3s ease;
+      display: none;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+    }
+
+    .guide-hand.active {
+      display: block;
+      opacity: 1;
+      animation: guideMove 2.2s infinite ease-in-out;
+    }
+
+    .guide-hand.hidden {
+      opacity: 0;
+    }
+
+    @keyframes guideMove {
+      0% {
+        transform: translate(-50%, -50%) scale(0.9);
+        opacity: 0;
+      }
+      20% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 1;
+      }
+      70% {
+        transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 50px))) scale(1);
+        opacity: 0.9;
+      }
+      90%, 100% {
+        transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 50px))) scale(0.8);
+        opacity: 0;
+      }
+    }
+
+    /* Crayon Color Palette */
     .crayon-palette {
       display: flex;
       justify-content: center;
@@ -186,6 +229,7 @@
     .btn-clear { background: #fab1a0; color: #d63031; }
     .btn-sound { background: #ffeaa7; color: #d35400; }
 
+    /* Celebration Card */
     .celebration-overlay {
       position: absolute;
       inset: 0;
@@ -273,6 +317,9 @@
       <canvas id="traceCanvas"></canvas>
       <canvas id="particleCanvas"></canvas>
       
+      <!-- Animated Guide Hand Indicator -->
+      <div class="guide-hand" id="guideHand">👆</div>
+
       <div class="celebration-overlay" id="celebrationCard">
         <div class="celebration-letter" id="vocab-letter">A</div>
         <div class="celebration-emoji" id="vocab-emoji">🍎</div>
@@ -301,7 +348,6 @@
   </div>
 
   <script>
-    // --- Child-Friendly Early Learning Datasets ---
     const datasets = {
       en: [
         { letter: 'A', word: 'Apple', phonic: 'A for Apple', emoji: '🍎', langCode: 'en-US' },
@@ -332,7 +378,6 @@
         { letter: 'Z', word: 'Zebra', phonic: 'Z for Zebra', emoji: '🦓', langCode: 'en-US' }
       ],
       hi: [
-        // Swar
         { letter: 'अ', word: 'अनार', phonic: 'अ से अनार', emoji: '🍎', langCode: 'hi-IN' },
         { letter: 'आ', word: 'आम', phonic: 'आ से आम', emoji: '🥭', langCode: 'hi-IN' },
         { letter: 'इ', word: 'इमली', phonic: 'इ से इमली', emoji: '🫘', langCode: 'hi-IN' },
@@ -346,7 +391,6 @@
         { letter: 'औ', word: 'औरत', phonic: 'औ से औरत', emoji: '👩', langCode: 'hi-IN' },
         { letter: 'अं', word: 'अंगूर', phonic: 'अं से अंगूर', emoji: '🍇', langCode: 'hi-IN' },
         { letter: 'अः', word: 'खाली', phonic: 'अः खाली', emoji: '👏', langCode: 'hi-IN' },
-        // Vyanjan
         { letter: 'क', word: 'कमल', phonic: 'क से कमल', emoji: '🪷', langCode: 'hi-IN' },
         { letter: 'ख', word: 'खरगोश', phonic: 'ख से खरगोश', emoji: '🐰', langCode: 'hi-IN' },
         { letter: 'ग', word: 'गमला', phonic: 'ग से गमला', emoji: '🪴', langCode: 'hi-IN' },
@@ -383,7 +427,6 @@
         { letter: 'ज्ञ', word: 'ज्ञानी', phonic: 'ज्ञ से ज्ञानी', emoji: '📚', langCode: 'hi-IN' }
       ],
       mr: [
-        // Swar
         { letter: 'अ', word: 'अननस', phonic: 'अ - अननस', emoji: '🍍', langCode: 'mr-IN' },
         { letter: 'आ', word: 'आई', phonic: 'आ - आई', emoji: '👩', langCode: 'mr-IN' },
         { letter: 'इ', word: 'इमारत', phonic: 'इ - इमारत', emoji: '🏢', langCode: 'mr-IN' },
@@ -396,7 +439,6 @@
         { letter: 'ओ', word: 'ओठ', phonic: 'ओ - ओठ', emoji: '👄', langCode: 'mr-IN' },
         { letter: 'औ', word: 'औषध', phonic: 'औ - औषध', emoji: '💊', langCode: 'mr-IN' },
         { letter: 'अं', word: 'अंगठी', phonic: 'अं - अंगठी', emoji: '💍', langCode: 'mr-IN' },
-        // Vyanjan
         { letter: 'क', word: 'कमळ', phonic: 'क - कमळ', emoji: '🪷', langCode: 'mr-IN' },
         { letter: 'ख', word: 'खडू', phonic: 'ख - खडू', emoji: '🖍️', langCode: 'mr-IN' },
         { letter: 'ग', word: 'गाजर', phonic: 'ग - गाजर', emoji: '🥕', langCode: 'mr-IN' },
@@ -445,6 +487,7 @@
     const ctx = canvas.getContext('2d');
     const pCanvas = document.getElementById('particleCanvas');
     const pCtx = pCanvas.getContext('2d');
+    const guideHand = document.getElementById('guideHand');
 
     let allTargetPoints = [];
     let strokeClusters = [];
@@ -493,11 +536,13 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
+      // Dashed guide outline
       ctx.setLineDash([12, 16]);
       ctx.lineWidth = 9;
       ctx.strokeStyle = '#b2bec3';
       ctx.strokeText(item.letter, width / 2, height / 2 + 4);
 
+      // Light background fill
       ctx.fillStyle = 'rgba(238, 238, 238, 0.4)';
       ctx.fillText(item.letter, width / 2, height / 2 + 4);
 
@@ -507,8 +552,12 @@
       document.getElementById('progressBar').style.width = '0%';
       document.getElementById('celebrationCard').classList.remove('show');
       isCompleted = false;
+
+      // Position and start guide hand
+      positionGuideHand();
     }
 
+    // 3x3 Spatial Grid Mapping & Starting Point Calculation
     function mapLetterPoints(letter, width, height, fontSize) {
       const offCanvas = document.createElement('canvas');
       offCanvas.width = width;
@@ -560,6 +609,30 @@
       }
     }
 
+    // Calculate natural start point and position animated guide hand
+    function positionGuideHand() {
+      if (allTargetPoints.length === 0) return;
+
+      // Find highest points on the letter
+      let topPoints = [...allTargetPoints].sort((a, b) => a.y - b.y).slice(0, 8);
+      // Pick the left-most among top points (natural writing start)
+      topPoints.sort((a, b) => a.x - b.x);
+      const startPt = topPoints[0];
+
+      guideHand.style.left = `${startPt.x}px`;
+      guideHand.style.top = `${startPt.y}px`;
+      guideHand.style.setProperty('--dx', '0px');
+      guideHand.style.setProperty('--dy', '45px');
+
+      guideHand.classList.remove('hidden');
+      guideHand.classList.add('active');
+    }
+
+    function hideGuideHand() {
+      guideHand.classList.add('hidden');
+    }
+
+    // Star Sparkle Particles
     function spawnSparkles(x, y) {
       for (let i = 0; i < 3; i++) {
         particles.push({
@@ -601,6 +674,27 @@
     }
     requestAnimationFrame(animateParticles);
 
+    // Celebration Chime Audio using Web Audio API
+    function playCelebrationChime() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.15, audioCtx.currentTime + i * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.1 + 0.4);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + i * 0.1);
+          osc.stop(audioCtx.currentTime + i * 0.1 + 0.4);
+        });
+      } catch (e) {}
+    }
+
+    // Speech Synthesis
     function speakText(text, langCode, rate = 0.75, onEndCallback = null) {
       if (!('speechSynthesis' in window)) return;
 
@@ -631,6 +725,7 @@
       });
     }
 
+    // Drawing Controls
     function getPointerPos(e) {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -644,6 +739,7 @@
     function startDrawing(e) {
       if (isCompleted) return;
       isDrawing = true;
+      hideGuideHand();
       const pos = getPointerPos(e);
       drawStroke(pos.x, pos.y, false);
       spawnSparkles(pos.x, pos.y);
@@ -714,6 +810,7 @@
         isCompleted = true;
         document.getElementById('progressBar').style.width = '100%';
         
+        playCelebrationChime();
         revealDigitalLetter();
 
         setTimeout(() => {
