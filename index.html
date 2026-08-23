@@ -158,20 +158,21 @@
     .btn-clear { background: #fab1a0; color: #d63031; }
     .btn-sound { background: #ffeaa7; color: #d35400; }
 
+    /* Enlarged Celebration Overlay Card */
     .celebration-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(255, 255, 255, 0.96);
+      background: rgba(255, 255, 255, 0.98);
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: space-evenly;
       opacity: 0;
       pointer-events: none;
-      transform: scale(0.8);
+      transform: scale(0.85);
       transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       z-index: 10;
-      padding: 20px;
+      padding: 24px 16px;
       text-align: center;
     }
 
@@ -182,42 +183,44 @@
     }
 
     .celebration-letter {
-      font-size: 2.8rem;
-      font-weight: bold;
+      font-size: 4.8rem;
+      font-weight: 900;
       color: #ff7675;
+      line-height: 1.1;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.08);
     }
 
     .celebration-emoji {
-      font-size: 4.8rem;
-      margin: 8px 0;
-      animation: pulseBounce 1s infinite alternate ease-in-out;
+      font-size: 5.5rem;
+      line-height: 1;
+      animation: pulseBounce 0.9s infinite alternate ease-in-out;
     }
 
     .celebration-word {
-      font-size: 2rem;
-      font-weight: bold;
+      font-size: 2.6rem;
+      font-weight: 800;
       color: #2d3436;
+      line-height: 1.2;
     }
 
     .celebration-sub {
-      font-size: 1.2rem;
-      color: #636e72;
-      margin-top: 4px;
+      font-size: 1.5rem;
+      color: #0984e3;
+      font-weight: bold;
     }
 
     .celebration-timer-text {
-      margin-top: 14px;
-      font-size: 0.9rem;
-      color: #0984e3;
-      background: #e8f4fd;
-      padding: 6px 14px;
+      font-size: 1rem;
+      color: #2d3436;
+      background: #ffeaa7;
+      padding: 6px 18px;
       border-radius: 20px;
       font-weight: bold;
     }
 
     @keyframes pulseBounce {
-      0% { transform: scale(0.95); }
-      100% { transform: scale(1.15); }
+      0% { transform: scale(0.92); }
+      100% { transform: scale(1.18); }
     }
   </style>
 </head>
@@ -243,6 +246,7 @@
     <div class="canvas-wrapper">
       <canvas id="traceCanvas"></canvas>
       
+      <!-- Full-card Celebration Pop-up -->
       <div class="celebration-overlay" id="celebrationCard">
         <div class="celebration-letter" id="vocab-letter">A</div>
         <div class="celebration-emoji" id="vocab-emoji">🍎</div>
@@ -291,18 +295,17 @@
     let autoNextTimer = null;
 
     const canvas = document.getElementById('traceCanvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const ctx = canvas.getContext('2d');
     
-    // Spatial 3x3 Grid Map
-    let gridCells = [];
     let allTargetPoints = [];
+    let strokeClusters = [];
 
     function initCanvasSize() {
       const rect = canvas.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       renderLetter();
     }
 
@@ -321,7 +324,7 @@
 
       ctx.clearRect(0, 0, width, height);
 
-      const fontSize = Math.min(width, height) * 0.62;
+      const fontSize = Math.min(width, height) * 0.65;
       ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -330,14 +333,14 @@
       ctx.setLineDash([10, 14]);
       ctx.lineWidth = 8;
       ctx.strokeStyle = '#b2bec3';
-      ctx.strokeText(item.letter, width / 2, height / 2 + 8);
+      ctx.strokeText(item.letter, width / 2, height / 2 + 6);
 
       // Light background fill
       ctx.fillStyle = 'rgba(238, 238, 238, 0.4)';
-      ctx.fillText(item.letter, width / 2, height / 2 + 8);
+      ctx.fillText(item.letter, width / 2, height / 2 + 6);
 
-      // Map letter points into 3x3 spatial bounding grid
-      mapLetterToSpatialGrid(item.letter, width, height, fontSize);
+      // Map letter points into dense checkpoints
+      mapLetterPoints(item.letter, width, height, fontSize);
 
       document.getElementById('letter-title').textContent = `${item.letter} - ${item.word}`;
       document.getElementById('progressBar').style.width = '0%';
@@ -345,8 +348,8 @@
       isCompleted = false;
     }
 
-    // 3x3 Spatial Grid Partitioning
-    function mapLetterToSpatialGrid(letter, width, height, fontSize) {
+    // Maps points and creates grid clusters across the letter's active area
+    function mapLetterPoints(letter, width, height, fontSize) {
       const offCanvas = document.createElement('canvas');
       offCanvas.width = width;
       offCanvas.height = height;
@@ -355,18 +358,17 @@
       offCtx.font = `bold ${fontSize}px sans-serif`;
       offCtx.textAlign = 'center';
       offCtx.textBaseline = 'middle';
-      offCtx.fillText(letter, width / 2, height / 2 + 8);
+      offCtx.fillText(letter, width / 2, height / 2 + 6);
 
       const imgData = offCtx.getImageData(0, 0, width, height).data;
       allTargetPoints = [];
 
       let minX = width, maxX = 0, minY = height, maxY = 0;
 
-      // Extract bounding box and sample points
-      for (let y = 0; y < height; y += 10) {
-        for (let x = 0; x < width; x += 10) {
+      for (let y = 0; y < height; y += 8) {
+        for (let x = 0; x < width; x += 8) {
           const index = (y * width + x) * 4;
-          if (imgData[index + 3] > 120) {
+          if (imgData[index + 3] > 100) {
             allTargetPoints.push({ x, y, hit: false });
             if (x < minX) minX = x;
             if (x > maxX) maxX = x;
@@ -378,30 +380,27 @@
 
       if (allTargetPoints.length === 0) return;
 
-      // Create 3x3 spatial cells strictly covering the letter bounding box
-      gridCells = [];
-      const stepX = (maxX - minX) / 3;
+      // Group checkpoints into 6 distinct spatial zones (Left-Top, Right-Top, Left-Mid, Right-Mid, Left-Bot, Right-Bot)
+      strokeClusters = [];
+      const midX = (minX + maxX) / 2;
       const stepY = (maxY - minY) / 3;
 
-      for (let r = 0; r < 3; r++) {
-        for (let c = 0; c < 3; c++) {
-          const x0 = minX + c * stepX;
-          const x1 = x0 + stepX;
-          const y0 = minY + r * stepY;
-          const y1 = y0 + stepY;
+      const zoneBins = [[], [], [], [], [], []];
+      allTargetPoints.forEach(pt => {
+        const row = Math.min(2, Math.floor((pt.y - minY) / stepY));
+        const col = pt.x <= midX ? 0 : 1;
+        const binIndex = row * 2 + col;
+        zoneBins[binIndex].push(pt);
+      });
 
-          // Points falling inside this specific cell
-          const points = allTargetPoints.filter(p => p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1);
-          
-          // Only track cells that actually contain character strokes (min 5 points)
-          if (points.length >= 5) {
-            gridCells.push({ points: points });
-          }
+      // Keep only active bins containing actual strokes
+      zoneBins.forEach(bin => {
+        if (bin.length >= 6) {
+          strokeClusters.push(bin);
         }
-      }
+      });
     }
 
-    // Paced Audio Speech
     function speakText(text, langCode, rate = 0.75, onEndCallback = null) {
       if (!('speechSynthesis' in window)) return;
 
@@ -432,7 +431,6 @@
       });
     }
 
-    // Touch and Drawing Handlers
     function getPointerPos(e) {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -478,7 +476,7 @@
       ctx.lineTo(x, y);
       ctx.stroke();
 
-      const touchRadiusSq = 26 * 26;
+      const touchRadiusSq = 24 * 24;
       allTargetPoints.forEach(pt => {
         if (!pt.hit) {
           const dx = pt.x - x;
@@ -489,7 +487,6 @@
         }
       });
 
-      // Update progress strictly reflecting genuine completion
       if (allTargetPoints.length > 0) {
         const totalHits = allTargetPoints.filter(p => p.hit).length;
         const pct = Math.min(95, Math.round((totalHits / allTargetPoints.length) * 100));
@@ -498,29 +495,27 @@
     }
 
     function checkCompletionOnRelease() {
-      if (isCompleted || allTargetPoints.length === 0 || gridCells.length === 0) return;
+      if (isCompleted || allTargetPoints.length === 0 || strokeClusters.length === 0) return;
 
       const totalHits = allTargetPoints.filter(p => p.hit).length;
       const overallRatio = totalHits / allTargetPoints.length;
 
-      // Count how many individual grid cells have been traced (at least 40% hit per active cell)
-      let coveredCells = 0;
-      gridCells.forEach(cell => {
-        const cellHits = cell.points.filter(p => p.hit).length;
-        if (cellHits / cell.points.length >= 0.40) {
-          coveredCells++;
+      // 100% Structural Check: EVERY active letter segment must have at least 55% coverage
+      let allSegmentsDone = true;
+      strokeClusters.forEach(cluster => {
+        const clusterHits = cluster.filter(p => p.hit).length;
+        if (clusterHits / cluster.length < 0.55) {
+          allSegmentsDone = false;
         }
       });
 
-      // Verification Rule: Must complete at least 80% of all spatial cells AND 68% of total pixels
-      const requiredCells = Math.ceil(gridCells.length * 0.80);
-
-      if (overallRatio >= 0.68 && coveredCells >= requiredCells) {
+      // Strict Completion Rule: Overall coverage >= 82% AND all segments covered
+      if (overallRatio >= 0.82 && allSegmentsDone) {
         isCompleted = true;
         document.getElementById('progressBar').style.width = '100%';
         setTimeout(() => {
           triggerCelebration();
-        }, 400);
+        }, 350);
       }
     }
 
