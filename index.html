@@ -19,7 +19,7 @@
     }
 
     body {
-      font-family: 'Fredoka', 'Comic Sans MS', sans-serif;
+      font-family: 'Fredoka', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
       min-height: 100vh;
       display: flex;
@@ -309,7 +309,6 @@
   </div>
 
   <script>
-    // --- Clean Datasets (Sanitized for iOS Speech Engines) ---
     const datasets = {
       en: [
         { letter: 'A', word: 'Apple', phonic: 'A for Apple', speechText: 'A is for Apple', emoji: '🍎', langCode: 'en-US' },
@@ -376,7 +375,7 @@
         { letter: 'ब', word: 'बत्तख', phonic: 'ब से बत्तख', speechText: 'ब से बत्तख', emoji: '🦆', langCode: 'hi-IN' },
         { letter: 'भ', word: 'भालू', phonic: 'भ से भालू', speechText: 'भ से भालू', emoji: '🐻', langCode: 'hi-IN' },
         { letter: 'म', word: 'मछली', phonic: 'म से मछली', speechText: 'म से मछली', emoji: '🐟', langCode: 'hi-IN' },
-        { letter: 'य', word: 'यज्ञ', phonic: 'य से यज्ञ', speechText: 'य से यज्ञ', emoji: '🔥', langCode: 'hi-IN' },
+        { letter: 'य', word: 'यज्ञ', phonic: 'य से यज्ञ', speechText: 'यज्ञ', emoji: '🔥', langCode: 'hi-IN' },
         { letter: 'र', word: 'रथ', phonic: 'र से रथ', speechText: 'र से रथ', emoji: '🚜', langCode: 'hi-IN' },
         { letter: 'ल', word: 'लट्टू', phonic: 'ल से लट्टू', speechText: 'ल से लट्टू', emoji: '🪀', langCode: 'hi-IN' },
         { letter: 'व', word: 'वक', phonic: 'व से वक', speechText: 'व से वक', emoji: '🦩', langCode: 'hi-IN' },
@@ -457,12 +456,11 @@
     let strokeClusters = [];
     let particles = [];
 
-    // Initialize AudioContext safely on user touch
     function unlockAudio() {
       if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
       }
-      if (audioContext.state === 'suspended') {
+      if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume();
       }
     }
@@ -525,7 +523,7 @@
       const centerX = width / 2;
       const centerY = height / 2 + 4;
 
-      // 1. Hollow Bubble Track
+      // 1. Hollow Track Shell
       const maskCanvas = document.createElement('canvas');
       maskCanvas.width = width;
       maskCanvas.height = height;
@@ -550,7 +548,7 @@
 
       gCtx.drawImage(maskCanvas, 0, 0);
 
-      // 2. Centered Dotted Line
+      // 2. Centered Dotted Blue Path
       gCtx.font = fontStr;
       gCtx.textAlign = 'center';
       gCtx.textBaseline = 'middle';
@@ -619,7 +617,7 @@
       drawAnatomicalStrokes(letter, minX, maxX, minY, maxY);
     }
 
-    // Directional Stroke System
+    // Fail-Safe Directional Arrows & Badges
     function drawAnatomicalStrokes(letter, minX, maxX, minY, maxY) {
       gCtx.setLineDash([]);
       const midX = (minX + maxX) / 2;
@@ -682,6 +680,7 @@
         gCtx.fill();
       }
 
+      // --- Devanagari Script ---
       if (currentLang !== 'en') {
         if (['इ', 'ई', 'ड', 'ङ', 'झ', 'ज्ञ', 'ऋ', 'ह'].includes(letter)) {
           renderBadge('1', midX, minY + 14);
@@ -728,6 +727,15 @@
           drawArcArrow(midX + 20, midY + 12, 18, -Math.PI / 2, Math.PI / 3, false);
           renderBadge('4', minX + 12, minY + 6);
           drawArrow(minX + 22, minY + 6, maxX - 12, minY + 6);
+        } else if (['घ', 'छ', 'ध', 'थ'].includes(letter)) {
+          renderBadge('1', minX + 16, minY + (maxY - minY) * 0.24);
+          drawArcArrow(minX + 30, minY + (maxY - minY) * 0.26, 16, -Math.PI / 2, Math.PI / 3, false);
+          renderBadge('2', minX + 16, minY + (maxY - minY) * 0.52);
+          drawArcArrow(minX + 30, minY + (maxY - minY) * 0.54, 18, -Math.PI / 2, Math.PI / 3, false);
+          renderBadge('3', maxX - 18, minY + 16);
+          drawArrow(maxX - 18, minY + 26, maxX - 18, maxY - 16);
+          renderBadge('4', minX + 12, minY + 6);
+          drawArrow(minX + 22, minY + 6, maxX - 12, minY + 6);
         } else {
           renderBadge('1', minX + 16, minY + 24);
           drawArrow(minX + 16, minY + 34, minX + 16, maxY - 20);
@@ -736,7 +744,9 @@
           renderBadge('3', minX + 12, minY + 6);
           drawArrow(minX + 22, minY + 6, maxX - 12, minY + 6);
         }
-      } else {
+      } 
+      // --- English Script ---
+      else {
         if (letter === 'A') {
           renderBadge('1', midX - 8, minY + 12);
           drawArrow(midX - 14, minY + 22, minX + 12, maxY - 12);
@@ -764,6 +774,19 @@
           drawArcArrow(midX, midY, (maxX - minX) * 0.40, -Math.PI / 4, Math.PI * 0.78, true);
           renderBadge('2', maxX - 8, midY + 4);
           drawArrow(maxX - 8, midY + 4, midX + 6, midY + 4);
+        } else if (letter === 'J') {
+          renderBadge('1', maxX - 16, minY + 10);
+          drawArrow(maxX - 16, minY + 20, maxX - 16, maxY - 28);
+          drawArcArrow(midX + 10, maxY - 28, 20, 0, Math.PI * 0.85, false);
+        } else if (letter === 'M') {
+          renderBadge('1', minX + 10, minY + 10);
+          drawArrow(minX + 10, minY + 20, minX + 10, maxY - 14);
+          renderBadge('2', minX + 14, minY + 12);
+          drawArrow(minX + 18, minY + 16, midX, maxY - 18);
+          renderBadge('3', maxX - 14, minY + 12);
+          drawArrow(maxX - 18, minY + 16, midX, maxY - 18);
+          renderBadge('4', maxX - 10, minY + 10);
+          drawArrow(maxX - 10, minY + 20, maxX - 10, maxY - 14);
         } else {
           renderBadge('1', minX + 10, minY + 12);
           drawArrow(minX + 10, minY + 22, minX + 10, maxY - 14);
@@ -826,21 +849,22 @@
           gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + i * 0.1 + 0.4);
           osc.connect(gain);
           gain.connect(audioContext.destination);
-          osc.start(audioContext.currentTime + i * 0.1);
-          osc.stop(audioContext.currentTime + i * 0.1 + 0.4);
+          osc.start(audioCtxTime() + i * 0.1);
+          osc.stop(audioCtxTime() + i * 0.1 + 0.4);
         });
       } catch (e) {}
     }
 
-    // iOS-Safe Cross-Platform Voice Filter
+    function audioCtxTime() {
+      return audioContext ? audioContext.currentTime : 0;
+    }
+
     function getBestVoice(langCode) {
       if (!('speechSynthesis' in window)) return null;
       const voices = window.speechSynthesis.getVoices();
       const langPrefix = langCode.slice(0, 2);
 
-      // Preferred natural female & native voices
       const femaleKeywords = ['female', 'google', 'natural', 'kalpana', 'heera', 'samantha', 'victoria', 'kiran', 'swara', 'siri'];
-      
       const matchingVoices = voices.filter(v => v.lang.toLowerCase().replace('_', '-').startsWith(langPrefix));
       
       const bestFemaleVoice = matchingVoices.find(v => {
@@ -851,23 +875,21 @@
       return bestFemaleVoice || matchingVoices[0] || null;
     }
 
-    // iOS Bug-Resistant Speech Engine
     function speakText(text, langCode, rate = 0.75) {
       if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
+      try {
+        window.speechSynthesis.cancel();
+        const cleanText = text.replace(/[-:;,."']/g, ' ').replace(/\s+/g, ' ').trim();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = langCode;
+        utterance.rate = rate;
+        utterance.pitch = 1.15;
 
-      // Strip punctuation so iOS engines don't read "hyphen", "colon" or "quote"
-      const cleanText = text.replace(/[-:;,."']/g, ' ').replace(/\s+/g, ' ').trim();
+        const voice = getBestVoice(langCode);
+        if (voice) utterance.voice = voice;
 
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.lang = langCode;
-      utterance.rate = rate;
-      utterance.pitch = 1.15;
-
-      const voice = getBestVoice(langCode);
-      if (voice) utterance.voice = voice;
-
-      window.speechSynthesis.speak(utterance);
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {}
     }
 
     function playCurrentAudioPaced() {
@@ -878,7 +900,6 @@
       }, 700);
     }
 
-    // Touch & Pointer Normalizer
     function getPointerPos(e) {
       const rect = dCanvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -966,7 +987,6 @@
         playCelebrationChime();
         revealDigitalLetter();
 
-        // Independent Timer: Guarantees auto-advance across iOS, Android, and Desktop
         setTimeout(() => {
           triggerCelebration();
         }, 1200);
@@ -1001,10 +1021,8 @@
       document.getElementById('vocab-phonics').textContent = item.phonic;
       document.getElementById('celebrationCard').classList.add('show');
 
-      // Play Paced Audio
       playCurrentAudioPaced();
 
-      // iOS Safe Auto-Advance (Fixed 3.5s Timer, not reliant on Safari onend events)
       if (autoNextTimer) clearTimeout(autoNextTimer);
       autoNextTimer = setTimeout(() => {
         nextLetter();
@@ -1047,13 +1065,15 @@
       window.speechSynthesis.onvoiceschanged = () => {};
     }
 
-    if (document.fonts) {
-      document.fonts.ready.then(() => {
-        initCanvasSize();
-      });
-    } else {
-      window.addEventListener('DOMContentLoaded', initCanvasSize);
-    }
+    // Direct Boot (Bypasses flaky Android document.fonts.ready blockers)
+    window.addEventListener('DOMContentLoaded', () => {
+      initCanvasSize();
+      if (document.fonts) {
+        document.fonts.ready.then(() => {
+          renderLetter();
+        }).catch(() => {});
+      }
+    });
   </script>
 </body>
 </html>
