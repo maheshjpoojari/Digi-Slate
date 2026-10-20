@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Kids Alphabet Tracing</title>
   
+  <!-- Preconnect & Universal Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Noto+Sans+Devanagari:wght@700&display=swap" rel="stylesheet">
@@ -14,6 +15,7 @@
       box-sizing: border-box;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-touch-callout: none;
       margin: 0;
       padding: 0;
     }
@@ -22,17 +24,23 @@
       font-family: 'Fredoka', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
       min-height: 100vh;
+      min-height: -webkit-fill-available;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: space-between;
       padding: 8px 12px;
+      padding-top: max(8px, env(safe-area-inset-top));
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
       color: #2f3e46;
       touch-action: none;
+      overflow: hidden;
     }
 
     .container {
       width: 100%;
-      max-width: 440px;
+      max-width: 460px;
+      height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -40,7 +48,7 @@
     }
 
     header h1 {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       color: #333;
     }
 
@@ -85,8 +93,8 @@
       border: none;
       color: white;
       font-size: 1.2rem;
-      width: 38px;
-      height: 38px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       cursor: pointer;
       box-shadow: 0 3px #0984e3;
@@ -98,20 +106,23 @@
     }
 
     .current-letter-display {
-      font-size: 1.35rem;
+      font-size: 1.3rem;
       font-weight: bold;
       color: #2d3436;
       font-family: 'Noto Sans Devanagari', 'Fredoka', sans-serif;
     }
 
+    /* Fully Flexible Canvas Container for foldables, tablets & candy-bar phones */
     .canvas-wrapper {
       position: relative;
       width: 100%;
-      aspect-ratio: 1 / 1.05;
+      flex: 1;
+      max-height: 58vh;
+      min-height: 260px;
       background: #ffffff;
-      border-radius: 24px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      border: 6px solid #ffeaa7;
+      border-radius: 22px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      border: 5px solid #ffeaa7;
       overflow: hidden;
     }
 
@@ -146,7 +157,7 @@
     }
 
     .crayon.selected {
-      transform: scale(1.22);
+      transform: scale(1.2);
       border-color: #2d3436;
     }
 
@@ -203,7 +214,7 @@
       transform: scale(0.85);
       transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       z-index: 20;
-      padding: 20px 14px;
+      padding: 16px 12px;
       text-align: center;
     }
 
@@ -214,7 +225,7 @@
     }
 
     .celebration-letter {
-      font-size: 4.8rem;
+      font-size: 4.4rem;
       font-weight: 900;
       color: #ff7675;
       line-height: 1;
@@ -222,13 +233,13 @@
     }
 
     .celebration-emoji {
-      font-size: 5.8rem;
+      font-size: 5rem;
       line-height: 1;
       animation: pulseBounce 0.9s infinite alternate ease-in-out;
     }
 
     .celebration-word {
-      font-size: 2.6rem;
+      font-size: 2.4rem;
       font-weight: 800;
       color: #2d3436;
       line-height: 1.1;
@@ -236,24 +247,24 @@
     }
 
     .celebration-sub {
-      font-size: 1.55rem;
+      font-size: 1.4rem;
       color: #0984e3;
       font-weight: bold;
       font-family: 'Noto Sans Devanagari', 'Fredoka', sans-serif;
     }
 
     .celebration-timer-text {
-      font-size: 1rem;
+      font-size: 0.95rem;
       color: #2d3436;
       background: #ffeaa7;
-      padding: 5px 20px;
+      padding: 4px 18px;
       border-radius: 18px;
       font-weight: bold;
     }
 
     @keyframes pulseBounce {
       0% { transform: scale(0.92); }
-      100% { transform: scale(1.16); }
+      100% { transform: scale(1.14); }
     }
   </style>
 </head>
@@ -276,7 +287,7 @@
       <button class="nav-arrow" onclick="nextLetter()">▶</button>
     </div>
 
-    <div class="canvas-wrapper">
+    <div class="canvas-wrapper" id="canvasBox">
       <canvas id="guideCanvas"></canvas>
       <canvas id="drawCanvas"></canvas>
       <canvas id="particleCanvas"></canvas>
@@ -311,32 +322,32 @@
   <script>
     const datasets = {
       en: [
-        { letter: 'A', word: 'Apple', phonic: 'A for Apple', speechText: 'A is for Apple', emoji: '🍎', langCode: 'en-US' },
-        { letter: 'B', word: 'Ball', phonic: 'B for Ball', speechText: 'B is for Ball', emoji: '⚽', langCode: 'en-US' },
-        { letter: 'C', word: 'Cat', phonic: 'C for Cat', speechText: 'C is for Cat', emoji: '🐱', langCode: 'en-US' },
-        { letter: 'D', word: 'Dog', phonic: 'D for Dog', speechText: 'D is for Dog', emoji: '🐶', langCode: 'en-US' },
-        { letter: 'E', word: 'Elephant', phonic: 'E for Elephant', speechText: 'E is for Elephant', emoji: '🐘', langCode: 'en-US' },
-        { letter: 'F', word: 'Fish', phonic: 'F for Fish', speechText: 'F is for Fish', emoji: '🐟', langCode: 'en-US' },
-        { letter: 'G', word: 'Grapes', phonic: 'G for Grapes', speechText: 'G is for Grapes', emoji: '🍇', langCode: 'en-US' },
-        { letter: 'H', word: 'Hat', phonic: 'H for Hat', speechText: 'H is for Hat', emoji: '🎩', langCode: 'en-US' },
-        { letter: 'I', word: 'Ice Cream', phonic: 'I for Ice Cream', speechText: 'I is for Ice Cream', emoji: '🍦', langCode: 'en-US' },
-        { letter: 'J', word: 'Jug', phonic: 'J for Jug', speechText: 'J is for Jug', emoji: '🥛', langCode: 'en-US' },
-        { letter: 'K', word: 'Kite', phonic: 'K for Kite', speechText: 'K is for Kite', emoji: '🪁', langCode: 'en-US' },
-        { letter: 'L', word: 'Lion', phonic: 'L for Lion', speechText: 'L is for Lion', emoji: '🦁', langCode: 'en-US' },
-        { letter: 'M', word: 'Mango', phonic: 'M for Mango', speechText: 'M is for Mango', emoji: '🥭', langCode: 'en-US' },
-        { letter: 'N', word: 'Nest', phonic: 'N for Nest', speechText: 'N is for Nest', emoji: '🪺', langCode: 'en-US' },
-        { letter: 'O', word: 'Orange', phonic: 'O for Orange', speechText: 'O is for Orange', emoji: '🍊', langCode: 'en-US' },
-        { letter: 'P', word: 'Parrot', phonic: 'P for Parrot', speechText: 'P is for Parrot', emoji: '🦜', langCode: 'en-US' },
-        { letter: 'Q', word: 'Queen', phonic: 'Q for Queen', speechText: 'Q is for Queen', emoji: '👑', langCode: 'en-US' },
-        { letter: 'R', word: 'Rabbit', phonic: 'R for Rabbit', speechText: 'R is for Rabbit', emoji: '🐰', langCode: 'en-US' },
-        { letter: 'S', word: 'Sun', phonic: 'S for Sun', speechText: 'S is for Sun', emoji: '☀️', langCode: 'en-US' },
-        { letter: 'T', word: 'Tiger', phonic: 'T for Tiger', speechText: 'T is for Tiger', emoji: '🐯', langCode: 'en-US' },
-        { letter: 'U', word: 'Umbrella', phonic: 'U for Umbrella', speechText: 'U is for Umbrella', emoji: '☂️', langCode: 'en-US' },
-        { letter: 'V', word: 'Van', phonic: 'V for Van', speechText: 'V is for Van', emoji: '🚐', langCode: 'en-US' },
-        { letter: 'W', word: 'Watch', phonic: 'W for Watch', speechText: 'W is for Watch', emoji: '⌚', langCode: 'en-US' },
-        { letter: 'X', word: 'Xylophone', phonic: 'X for Xylophone', speechText: 'X is for Xylophone', emoji: '🎵', langCode: 'en-US' },
-        { letter: 'Y', word: 'Yak', phonic: 'Y for Yak', speechText: 'Y is for Yak', emoji: '🐂', langCode: 'en-US' },
-        { letter: 'Z', word: 'Zebra', phonic: 'Z for Zebra', speechText: 'Z is for Zebra', emoji: '🦓', langCode: 'en-US' }
+        { letter: 'A', word: 'Apple', phonic: 'A for Apple', speechText: 'A for Apple', emoji: '🍎', langCode: 'en-US' },
+        { letter: 'B', word: 'Ball', phonic: 'B for Ball', speechText: 'B for Ball', emoji: '⚽', langCode: 'en-US' },
+        { letter: 'C', word: 'Cat', phonic: 'C for Cat', speechText: 'C for Cat', emoji: '🐱', langCode: 'en-US' },
+        { letter: 'D', word: 'Dog', phonic: 'D for Dog', speechText: 'D for Dog', emoji: '🐶', langCode: 'en-US' },
+        { letter: 'E', word: 'Elephant', phonic: 'E for Elephant', speechText: 'E for Elephant', emoji: '🐘', langCode: 'en-US' },
+        { letter: 'F', word: 'Fish', phonic: 'F for Fish', speechText: 'F for Fish', emoji: '🐟', langCode: 'en-US' },
+        { letter: 'G', word: 'Grapes', phonic: 'G for Grapes', speechText: 'G for Grapes', emoji: '🍇', langCode: 'en-US' },
+        { letter: 'H', word: 'Hat', phonic: 'H for Hat', speechText: 'H for Hat', emoji: '🎩', langCode: 'en-US' },
+        { letter: 'I', word: 'Ice Cream', phonic: 'I for Ice Cream', speechText: 'I for Ice Cream', emoji: '🍦', langCode: 'en-US' },
+        { letter: 'J', word: 'Jug', phonic: 'J for Jug', speechText: 'J for Jug', emoji: '🥛', langCode: 'en-US' },
+        { letter: 'K', word: 'Kite', phonic: 'K for Kite', speechText: 'K for Kite', emoji: '🪁', langCode: 'en-US' },
+        { letter: 'L', word: 'Lion', phonic: 'L for Lion', speechText: 'L for Lion', emoji: '🦁', langCode: 'en-US' },
+        { letter: 'M', word: 'Mango', phonic: 'M for Mango', speechText: 'M for Mango', emoji: '🥭', langCode: 'en-US' },
+        { letter: 'N', word: 'Nest', phonic: 'N for Nest', speechText: 'N for Nest', emoji: '🪺', langCode: 'en-US' },
+        { letter: 'O', word: 'Orange', phonic: 'O for Orange', speechText: 'O for Orange', emoji: '🍊', langCode: 'en-US' },
+        { letter: 'P', word: 'Parrot', phonic: 'P for Parrot', speechText: 'P for Parrot', emoji: '🦜', langCode: 'en-US' },
+        { letter: 'Q', word: 'Queen', phonic: 'Q for Queen', speechText: 'Q for Queen', emoji: '👑', langCode: 'en-US' },
+        { letter: 'R', word: 'Rabbit', phonic: 'R for Rabbit', speechText: 'R for Rabbit', emoji: '🐰', langCode: 'en-US' },
+        { letter: 'S', word: 'Sun', phonic: 'S for Sun', speechText: 'S for Sun', emoji: '☀️', langCode: 'en-US' },
+        { letter: 'T', word: 'Tiger', phonic: 'T for Tiger', speechText: 'T for Tiger', emoji: '🐯', langCode: 'en-US' },
+        { letter: 'U', word: 'Umbrella', phonic: 'U for Umbrella', speechText: 'U for Umbrella', emoji: '☂️', langCode: 'en-US' },
+        { letter: 'V', word: 'Van', phonic: 'V for Van', speechText: 'V for Van', emoji: '🚐', langCode: 'en-US' },
+        { letter: 'W', word: 'Watch', phonic: 'W for Watch', speechText: 'W for Watch', emoji: '⌚', langCode: 'en-US' },
+        { letter: 'X', word: 'Xylophone', phonic: 'X for Xylophone', speechText: 'X for Xylophone', emoji: '🎵', langCode: 'en-US' },
+        { letter: 'Y', word: 'Yak', phonic: 'Y for Yak', speechText: 'Y for Yak', emoji: '🐂', langCode: 'en-US' },
+        { letter: 'Z', word: 'Zebra', phonic: 'Z for Zebra', speechText: 'Z for Zebra', emoji: '🦓', langCode: 'en-US' }
       ],
       hi: [
         { letter: 'अ', word: 'अनार', phonic: 'अ से अनार', speechText: 'अ से अनार', emoji: '🍎', langCode: 'hi-IN' },
@@ -417,7 +428,7 @@
         { letter: 'थ', word: 'थवा', phonic: 'थ - थवा', speechText: 'थ थवा', emoji: '🕊️', langCode: 'mr-IN' },
         { letter: 'द', word: 'दप्तर', phonic: 'द - दप्तर', speechText: 'द दप्तर', emoji: '🎒', langCode: 'mr-IN' },
         { letter: 'ध', word: 'धनुष्य', phonic: 'ध - धनुष्य', speechText: 'ध धनुष्य', emoji: '🏹', langCode: 'mr-IN' },
-        { letter: 'न', word: 'नळ', phonic: 'न - नळ', speechText: 'न नळ', emoji: '🚰', langCode: 'mr-IN' },
+        { letter: 'न', word: 'नल', phonic: 'न - नळ', speechText: 'न नळ', emoji: '🚰', langCode: 'mr-IN' },
         { letter: 'प', word: 'पतंग', phonic: 'प - पतंग', speechText: 'प पतंग', emoji: '🪁', langCode: 'mr-IN' },
         { letter: 'फ', word: 'फळा', phonic: 'फ - फळा', speechText: 'फ फळा', emoji: '🍎', langCode: 'mr-IN' },
         { letter: 'ब', word: 'बदक', phonic: 'ब - बदक', speechText: 'ब बदक', emoji: '🦆', langCode: 'mr-IN' },
@@ -456,6 +467,7 @@
     let strokeClusters = [];
     let particles = [];
 
+    // Audio Unlock for Safari & Strict Android OEMs
     function unlockAudio() {
       if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -466,8 +478,9 @@
     }
 
     function initCanvasSize() {
-      const rect = dCanvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
+      const box = document.getElementById('canvasBox');
+      const rect = box.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.5); // Cap DPR to 2.5x to preserve memory & precision
       
       [gCanvas, dCanvas, pCanvas].forEach(c => {
         c.width = rect.width * dpr;
@@ -509,9 +522,9 @@
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
       const item = getCurrentItem();
-      const rect = dCanvas.getBoundingClientRect();
-      const width = rect.width;
-      const height = rect.height;
+      const box = document.getElementById('canvasBox');
+      const width = box.clientWidth;
+      const height = box.clientHeight;
 
       gCtx.clearRect(0, 0, width, height);
       dCtx.clearRect(0, 0, width, height);
@@ -617,7 +630,6 @@
       drawAnatomicalStrokes(letter, minX, maxX, minY, maxY);
     }
 
-    // Fail-Safe Directional Arrows & Badges
     function drawAnatomicalStrokes(letter, minX, maxX, minY, maxY) {
       gCtx.setLineDash([]);
       const midX = (minX + maxX) / 2;
@@ -680,7 +692,6 @@
         gCtx.fill();
       }
 
-      // --- Devanagari Script ---
       if (currentLang !== 'en') {
         if (['इ', 'ई', 'ड', 'ङ', 'झ', 'ज्ञ', 'ऋ', 'ह'].includes(letter)) {
           renderBadge('1', midX, minY + 14);
@@ -727,15 +738,6 @@
           drawArcArrow(midX + 20, midY + 12, 18, -Math.PI / 2, Math.PI / 3, false);
           renderBadge('4', minX + 12, minY + 6);
           drawArrow(minX + 22, minY + 6, maxX - 12, minY + 6);
-        } else if (['घ', 'छ', 'ध', 'थ'].includes(letter)) {
-          renderBadge('1', minX + 16, minY + (maxY - minY) * 0.24);
-          drawArcArrow(minX + 30, minY + (maxY - minY) * 0.26, 16, -Math.PI / 2, Math.PI / 3, false);
-          renderBadge('2', minX + 16, minY + (maxY - minY) * 0.52);
-          drawArcArrow(minX + 30, minY + (maxY - minY) * 0.54, 18, -Math.PI / 2, Math.PI / 3, false);
-          renderBadge('3', maxX - 18, minY + 16);
-          drawArrow(maxX - 18, minY + 26, maxX - 18, maxY - 16);
-          renderBadge('4', minX + 12, minY + 6);
-          drawArrow(minX + 22, minY + 6, maxX - 12, minY + 6);
         } else {
           renderBadge('1', minX + 16, minY + 24);
           drawArrow(minX + 16, minY + 34, minX + 16, maxY - 20);
@@ -744,9 +746,7 @@
           renderBadge('3', minX + 12, minY + 6);
           drawArrow(minX + 22, minY + 6, maxX - 12, minY + 6);
         }
-      } 
-      // --- English Script ---
-      else {
+      } else {
         if (letter === 'A') {
           renderBadge('1', midX - 8, minY + 12);
           drawArrow(midX - 14, minY + 22, minX + 12, maxY - 12);
@@ -769,24 +769,6 @@
           drawArrow(minX + 10, minY + 20, minX + 10, maxY - 14);
           renderBadge('2', minX + 26, minY + 8);
           drawArcArrow(midX + 2, midY, (maxX - minX) * 0.42, -Math.PI / 2, Math.PI / 2);
-        } else if (letter === 'G') {
-          renderBadge('1', maxX - 14, minY + 18);
-          drawArcArrow(midX, midY, (maxX - minX) * 0.40, -Math.PI / 4, Math.PI * 0.78, true);
-          renderBadge('2', maxX - 8, midY + 4);
-          drawArrow(maxX - 8, midY + 4, midX + 6, midY + 4);
-        } else if (letter === 'J') {
-          renderBadge('1', maxX - 16, minY + 10);
-          drawArrow(maxX - 16, minY + 20, maxX - 16, maxY - 28);
-          drawArcArrow(midX + 10, maxY - 28, 20, 0, Math.PI * 0.85, false);
-        } else if (letter === 'M') {
-          renderBadge('1', minX + 10, minY + 10);
-          drawArrow(minX + 10, minY + 20, minX + 10, maxY - 14);
-          renderBadge('2', minX + 14, minY + 12);
-          drawArrow(minX + 18, minY + 16, midX, maxY - 18);
-          renderBadge('3', maxX - 14, minY + 12);
-          drawArrow(maxX - 18, minY + 16, midX, maxY - 18);
-          renderBadge('4', maxX - 10, minY + 10);
-          drawArrow(maxX - 10, minY + 20, maxX - 10, maxY - 14);
         } else {
           renderBadge('1', minX + 10, minY + 12);
           drawArrow(minX + 10, minY + 22, minX + 10, maxY - 14);
@@ -845,8 +827,8 @@
           const gain = audioContext.createGain();
           osc.type = 'sine';
           osc.frequency.value = freq;
-          gain.gain.setValueAtTime(0.15, audioContext.currentTime + i * 0.1);
-          gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + i * 0.1 + 0.4);
+          gain.gain.setValueAtTime(0.15, audioCtxTime() + i * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtxTime() + i * 0.1 + 0.4);
           osc.connect(gain);
           gain.connect(audioContext.destination);
           osc.start(audioCtxTime() + i * 0.1);
@@ -948,7 +930,8 @@
       dCtx.lineTo(x, y);
       dCtx.stroke();
 
-      const touchRadiusSq = 24 * 24;
+      // Increased hit-detection radius for small screens & foldables
+      const touchRadiusSq = 28 * 28;
       allTargetPoints.forEach(pt => {
         if (!pt.hit) {
           const dx = pt.x - x;
@@ -975,12 +958,13 @@
       let allSegmentsDone = true;
       strokeClusters.forEach(cluster => {
         const clusterHits = cluster.filter(p => p.hit).length;
-        if (clusterHits / cluster.length < 0.50) {
+        // Relaxed threshold (42%) to guarantee child-friendly completion across all screen ratios
+        if (clusterHits / cluster.length < 0.42) {
           allSegmentsDone = false;
         }
       });
 
-      if (overallRatio >= 0.82 && allSegmentsDone) {
+      if (overallRatio >= 0.78 && allSegmentsDone) {
         isCompleted = true;
         document.getElementById('progressBar').style.width = '100%';
         
@@ -995,9 +979,9 @@
 
     function revealDigitalLetter() {
       const item = getCurrentItem();
-      const rect = dCanvas.getBoundingClientRect();
-      const width = rect.width;
-      const height = rect.height;
+      const box = document.getElementById('canvasBox');
+      const width = box.clientWidth;
+      const height = box.clientHeight;
       const fontSize = calculateBestFontSize(item.letter, width, height);
 
       dCtx.clearRect(0, 0, width, height);
@@ -1051,6 +1035,7 @@
       renderLetter();
     }
 
+    // Pointer events for uniform touch/mouse on mobile, foldables, and desktop
     dCanvas.addEventListener('mousedown', startDrawing);
     dCanvas.addEventListener('mousemove', draw);
     window.addEventListener('mouseup', stopDrawing);
@@ -1059,13 +1044,17 @@
     dCanvas.addEventListener('touchmove', draw, { passive: false });
     window.addEventListener('touchend', stopDrawing);
 
-    window.addEventListener('resize', initCanvasSize);
-    
+    // ResizeObserver watches fold/unfold dynamic screen layout changes instantly
+    const resizeObserver = new ResizeObserver(() => {
+      initCanvasSize();
+    });
+    resizeObserver.observe(document.getElementById('canvasBox'));
+
     if ('speechSynthesis' in window) {
       window.speechSynthesis.onvoiceschanged = () => {};
     }
 
-    // Direct Boot (Bypasses flaky Android document.fonts.ready blockers)
+    // Instant fail-safe launch
     window.addEventListener('DOMContentLoaded', () => {
       initCanvasSize();
       if (document.fonts) {
